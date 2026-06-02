@@ -1,0 +1,86 @@
+# ═══════════════════════════════════════════════════
+# .gitignore — CareerPilot AI
+# ═══════════════════════════════════════════════════
+
+# ── Secrets / Environment ──────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ── Python ────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+build/
+dist/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ── Node / Frontend ───────────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+.npm
+.yarn-integrity
+
+# ── Alembic ───────────────────────────────────────
+# Keep migration files — they are part of your source code.
+# Only ignore the compiled Python cache inside alembic.
+backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
+
+# ── Docker ────────────────────────────────────────
+# Do NOT ignore docker-compose.yml — it's part of the project.
+# Ignore local override files.
+docker-compose.override.yml
+
+# ── Operating System ──────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Editors & IDEs ────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.suo
+*.user
+.vs/
+
+# ── Logs ──────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Uploads / User-generated content ──────────────
+backend/uploads/
+
+# ── Testing artifacts ─────────────────────────────
+.coverage
+coverage/

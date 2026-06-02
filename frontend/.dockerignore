@@ -1,0 +1,14 @@
+# .dockerignore for the Frontend
+# Prevents unnecessary files from being sent to the Docker build context,
+# which speeds up builds and reduces image size.
+
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.git/
+.gitignore
+README.md
