@@ -2,7 +2,7 @@
 Authentication Pydantic Schemas.
 
 Defines the shape of data coming IN (requests) and going OUT (responses)
-for all authentication-related API operations (login, token refresh).
+for all authentication-related API operations (login, token refresh, Google OAuth).
 """
 
 from pydantic import BaseModel, EmailStr, Field
@@ -34,9 +34,6 @@ class RefreshTokenRequest(BaseModel):
     """
     Payload required to exchange a refresh token for a new token pair.
     Used by: POST /api/v1/auth/refresh
-
-    The refresh token is a high-entropy random string (not a JWT).
-    It is stored as a SHA-256 hash in the database.
     """
 
     refresh_token: str = Field(
@@ -46,6 +43,42 @@ class RefreshTokenRequest(BaseModel):
     )
 
 
+class GoogleExchangeRequest(BaseModel):
+    """
+    Payload to exchange a short-lived Google one-time code for a JWT pair.
+    Used by: POST /api/v1/auth/google/exchange
+
+    The frontend receives the code as a URL query param after the Google OAuth
+    callback, then immediately sends it here to get tokens without exposing
+    a JWT in the URL.
+    """
+
+    code: str = Field(
+        min_length=10,
+        description="The one-time auth code from the Google callback redirect.",
+    )
+
+
+class ForgotPasswordRequest(BaseModel):
+    """
+    Payload to request a password reset email/link.
+    """
+    email: EmailStr = Field(description="The registered email address.")
+
+
+class ResetPasswordRequest(BaseModel):
+    """
+    Payload to finalize a password reset with the new password.
+    """
+    token: str = Field(description="The short-lived reset token.")
+    new_password: str = Field(
+        min_length=8,
+        max_length=128,
+        description="The new account password.",
+    )
+
+
+
 # ─────────────────────────────────────────────────────────────
 # Response Schemas  (data the API sends BACK to the client)
 # ─────────────────────────────────────────────────────────────
@@ -53,13 +86,7 @@ class RefreshTokenRequest(BaseModel):
 class TokenResponse(BaseModel):
     """
     Token pair returned after a successful login or token refresh.
-    Used by: POST /login (200), POST /refresh (200)
-
-    - access_token  → Short-lived JWT (default: 15 min). Use this on every
-                      protected API request in the Authorization header.
-    - refresh_token → Long-lived opaque token (default: 7 days). Use ONLY
-                      to obtain a new access_token when the current one expires.
-    - token_type    → Always "bearer". Tells the client how to send the token.
+    Used by: POST /login (200), POST /refresh (200), POST /google/exchange (200)
     """
 
     access_token: str  = Field(description="Short-lived JWT for API authorization.")
@@ -68,11 +95,8 @@ class TokenResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────
-# Internal Aliases  (keep backward-compat with router / service)
+# Internal Aliases  (backward-compat with router / service)
 # ─────────────────────────────────────────────────────────────
-
-# The router and service were written using 'LoginRequest', 'RefreshRequest',
-# and 'Token'. These aliases maintain compatibility without touching those files.
-LoginRequest  = UserLoginRequest
+LoginRequest   = UserLoginRequest
 RefreshRequest = RefreshTokenRequest
 Token          = TokenResponse
