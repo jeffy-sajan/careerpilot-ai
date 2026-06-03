@@ -2,12 +2,12 @@
 Google Auth Code Repository.
 Handles creation, lookup, and deletion of one-time auth codes.
 """
-import uuid
 import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.google_auth_code import GoogleAuthCode

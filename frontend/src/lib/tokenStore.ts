@@ -1,8 +1,8 @@
 /**
  * In-memory storage for the access token.
- * 
+ *
  * Storing the access token in memory instead of localStorage makes it
- * immune to Cross-Site Scripting (XSS) attacks. 
+ * immune to Cross-Site Scripting (XSS) attacks.
  */
 
 let accessToken: string | null = null;

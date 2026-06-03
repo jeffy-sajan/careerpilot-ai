@@ -1,9 +1,9 @@
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { AxiosError } from 'axios';
-import { authApi } from '../../../lib/api/auth';
-import { useAuth } from '../../../context/AuthContext';
-import { LoginRequest } from '../../../types/auth';
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AxiosError } from "axios";
+import { authApi } from "../../../lib/api/auth";
+import { useAuth } from "../../../context/AuthContext";
+import { LoginRequest } from "../../../types/auth";
 
 export const useLogin = () => {
   const { login } = useAuth();
@@ -11,7 +11,9 @@ export const useLogin = () => {
   const location = useLocation();
 
   // Redirect to the page they originally tried to visit, or /dashboard
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/dashboard';
+  const from =
+    (location.state as { from?: { pathname: string } })?.from?.pathname ??
+    "/dashboard";
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authApi.login(data),
@@ -21,7 +23,7 @@ export const useLogin = () => {
     },
     // Return a clean error message string from the AxiosError
     onError: (error: AxiosError<{ detail: string }>) => {
-      return error.response?.data?.detail ?? 'Login failed. Please try again.';
+      return error.response?.data?.detail ?? "Login failed. Please try again.";
     },
   });
 };

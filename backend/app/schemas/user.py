@@ -11,7 +11,6 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-
 # ─────────────────────────────────────────────────────────────
 # Request Schemas  (data the CLIENT sends TO the API)
 # ─────────────────────────────────────────────────────────────

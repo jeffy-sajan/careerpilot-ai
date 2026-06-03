@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio
 async def test_register(client: AsyncClient):
     response = await client.post("/api/v1/auth/register", json={

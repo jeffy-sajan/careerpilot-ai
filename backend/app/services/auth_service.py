@@ -1,25 +1,27 @@
 """
 Authentication Service.
 """
-import uuid
-import secrets
 import hashlib
+import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import (
-    verify_password,
-    get_password_hash,
     create_access_token,
     create_password_reset_token,
+    get_password_hash,
+    verify_password,
     verify_password_reset_token,
 )
-from app.schemas.user import UserCreate
-from app.schemas.auth import Token
 from app.models.user import User
-from app.repositories import user_repo, refresh_token_repo
+from app.repositories import refresh_token_repo, user_repo
+from app.schemas.auth import Token
+from app.schemas.user import UserCreate
+
 
 def _hash_token(token: str) -> str:
     """Creates a fast SHA256 hash for secure database lookup of high-entropy tokens."""

@@ -3,10 +3,12 @@ Security Utilities for JWT and Passwords.
 """
 from datetime import datetime, timedelta, timezone
 from typing import Any
-import jwt
+
 import bcrypt
+import jwt
 
 from app.core.config import settings
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain password against a hashed password."""

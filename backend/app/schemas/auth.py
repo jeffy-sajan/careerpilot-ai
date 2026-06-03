@@ -7,7 +7,6 @@ for all authentication-related API operations (login, token refresh, Google OAut
 
 from pydantic import BaseModel, EmailStr, Field
 
-
 # ─────────────────────────────────────────────────────────────
 # Request Schemas  (data the CLIENT sends TO the API)
 # ─────────────────────────────────────────────────────────────

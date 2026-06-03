@@ -1,6 +1,8 @@
 import pytest
-from app.schemas.user import UserCreate
+
 from app.repositories import user_repo
+from app.schemas.user import UserCreate
+
 
 @pytest.mark.asyncio
 async def test_create_and_get_user(db_session):

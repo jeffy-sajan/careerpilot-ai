@@ -1,0 +1,35 @@
+# ruff.toml — CareerPilot AI Backend Linter Configuration
+
+# Files and directories to exclude entirely
+exclude = [
+    ".venv",
+    ".env",
+    "__pycache__",
+    "alembic",       # Alembic-generated migrations use star imports by design
+    "scratch",       # Local scratch/debug scripts, not production code
+    "test_db.py",
+    "test_parse.py",
+    "generate_pdf.py",
+    "clear_resumes.py",
+]
+
+# Python version target
+target-version = "py311"
+
+# Max line length — 120 chars accommodates long type hints and SQLAlchemy query chains
+line-length = 120
+
+[lint]
+# Rules to enable — E (pycodestyle errors), F (pyflakes), I (isort)
+select = ["E", "F", "I"]
+
+# Ignore false positives:
+# F821 — "Undefined name" fires on SQLAlchemy string-based forward references
+#         e.g. Mapped["User"] — these are intentional and correct.
+# F403 — Star imports are used intentionally in alembic env.py for model loading.
+ignore = ["F821", "F403"]
+
+[lint.per-file-ignores]
+# In tests, variables are sometimes assigned just to create DB rows (not to be read).
+# Also allow longer lines in tests — breaking complex mock calls would hurt readability.
+"tests/**" = ["F841", "E501"]

@@ -3,12 +3,13 @@ User Repository.
 """
 import uuid
 from typing import Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import get_password_hash
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.core.security import get_password_hash
 
 
 async def get_by_email(session: AsyncSession, email: str) -> Optional[User]:

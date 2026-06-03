@@ -2,11 +2,13 @@
 Job Description Model.
 """
 import uuid
+
 from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
+
 
 class JobDescription(Base, TimestampMixin):
     __tablename__ = "job_descriptions"

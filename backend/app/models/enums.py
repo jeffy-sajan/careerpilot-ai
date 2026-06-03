@@ -3,6 +3,7 @@ Database Enums.
 """
 import enum
 
+
 class ApplicationStatus(str, enum.Enum):
     """Job application lifecycle statuses."""
     SAVED = "SAVED"
@@ -19,3 +20,11 @@ class ApplicationSource(str, enum.Enum):
     COMPANY_WEBSITE = "COMPANY_WEBSITE"
     REFERRAL = "REFERRAL"
     OTHER = "OTHER"
+
+class ResumeStatus(str, enum.Enum):
+    """Resume upload and parsing statuses."""
+    UPLOADED = "UPLOADED"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+

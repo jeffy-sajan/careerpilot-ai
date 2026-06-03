@@ -5,16 +5,16 @@ import {
   useEffect,
   useRef,
   ReactNode,
-} from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, TokenResponse } from '../types/auth';
-import { authApi } from '../lib/api/auth';
-import { getToken, setToken, clearToken } from '../lib/tokenStore';
+} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { User, TokenResponse } from "../types/auth";
+import { authApi } from "../lib/api/auth";
+import { getToken, setToken, clearToken } from "../lib/tokenStore";
 import {
   getRefreshToken,
   setRefreshToken,
   clearRefreshToken,
-} from '../lib/refreshTokenStore';
+} from "../lib/refreshTokenStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Context Shape
@@ -36,7 +36,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 // ─────────────────────────────────────────────────────────────────────────────
 const getTokenExpiry = (token: string): number | null => {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.exp ? payload.exp * 1000 : null; // Convert seconds → ms
   } catch {
     return null;
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // If an access token exists in memory, the request interceptor attaches it.
   // If it gets a 401, the response interceptor silently tries to refresh.
   const { isLoading, data, isError } = useQuery({
-    queryKey: ['authUser'],
+    queryKey: ["authUser"],
     queryFn: authApi.getMe,
     retry: false,
     refetchOnWindowFocus: false,
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRefreshToken(tokens.refresh_token);
     scheduleProactiveRefresh(tokens.access_token);
     // Refetch the user profile with the new token
-    queryClient.invalidateQueries({ queryKey: ['authUser'] });
+    queryClient.invalidateQueries({ queryKey: ["authUser"] });
   };
 
   const logout = async () => {
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearToken();
       clearRefreshToken();
       setUser(null);
-      queryClient.setQueryData(['authUser'], null);
+      queryClient.setQueryData(["authUser"], null);
       queryClient.clear();
     }
   };
@@ -149,10 +149,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // useAuth hook — throws if used outside AuthProvider
 // ─────────────────────────────────────────────────────────────────────────────
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

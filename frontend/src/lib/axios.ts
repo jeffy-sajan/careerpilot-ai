@@ -1,15 +1,16 @@
-import axios, {
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from 'axios';
-import { getToken, setToken, clearToken } from './tokenStore';
-import { getRefreshToken, setRefreshToken, clearRefreshToken } from './refreshTokenStore';
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { getToken, setToken, clearToken } from "./tokenStore";
+import {
+  getRefreshToken,
+  setRefreshToken,
+  clearRefreshToken,
+} from "./refreshTokenStore";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
 export const apiClient = axios.create({
   baseURL: API_URL,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
   withCredentials: true,
   timeout: 10000,
 });
@@ -44,7 +45,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ apiClient.interceptors.response.use(
     };
 
     const is401 = error.response?.status === 401;
-    const isRefreshEndpoint = originalRequest?.url?.includes('/auth/refresh');
+    const isRefreshEndpoint = originalRequest?.url?.includes("/auth/refresh");
     const alreadyRetried = originalRequest?._retry;
 
     if (!is401 || isRefreshEndpoint || alreadyRetried) {
@@ -89,15 +90,15 @@ apiClient.interceptors.response.use(
       clearToken();
       clearRefreshToken();
       isRefreshing = false;
-      processQueue(new Error('No refresh token'), null);
+      processQueue(new Error("No refresh token"), null);
       if (
-        window.location.pathname !== '/login' &&
-        window.location.pathname !== '/register' &&
-        window.location.pathname !== '/auth/google/callback' &&
-        window.location.pathname !== '/forgot-password' &&
-        window.location.pathname !== '/reset-password'
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/register" &&
+        window.location.pathname !== "/auth/google/callback" &&
+        window.location.pathname !== "/forgot-password" &&
+        window.location.pathname !== "/reset-password"
       ) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
       return Promise.reject(error);
     }
@@ -108,7 +109,7 @@ apiClient.interceptors.response.use(
       const { data } = await axios.post(
         `${API_URL}/auth/refresh`,
         { refresh_token: refreshToken },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } },
       );
 
       // Store the new token pair
@@ -128,17 +129,17 @@ apiClient.interceptors.response.use(
       clearToken();
       clearRefreshToken();
       if (
-        window.location.pathname !== '/login' &&
-        window.location.pathname !== '/register' &&
-        window.location.pathname !== '/auth/google/callback' &&
-        window.location.pathname !== '/forgot-password' &&
-        window.location.pathname !== '/reset-password'
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/register" &&
+        window.location.pathname !== "/auth/google/callback" &&
+        window.location.pathname !== "/forgot-password" &&
+        window.location.pathname !== "/reset-password"
       ) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
     }
-  }
+  },
 );

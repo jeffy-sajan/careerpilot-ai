@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { apiClient } from '../../../lib/axios';
-import { useAuth } from '../../../context/AuthContext';
-import { TokenResponse } from '../../../types/auth';
+import { useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { apiClient } from "../../../lib/axios";
+import { useAuth } from "../../../context/AuthContext";
+import { TokenResponse } from "../../../types/auth";
 
 /**
  * GoogleCallbackPage
@@ -28,19 +28,19 @@ const GoogleCallbackPage = () => {
     if (hasFired.current) return;
     hasFired.current = true;
 
-    const code = searchParams.get('code');
-    const isNewUser = searchParams.get('is_new_user') === 'true';
-    const error = searchParams.get('error');
+    const code = searchParams.get("code");
+    const isNewUser = searchParams.get("is_new_user") === "true";
+    const error = searchParams.get("error");
 
     // Handle errors redirected from the backend OAuth callback
     if (error) {
-      if (error === 'account_exists_with_different_provider') {
+      if (error === "account_exists_with_different_provider") {
         navigate(
-          '/login?message=An+account+with+this+email+already+exists.+Please+sign+in+with+your+email+and+password.',
-          { replace: true }
+          "/login?message=An+account+with+this+email+already+exists.+Please+sign+in+with+your+email+and+password.",
+          { replace: true },
         );
       } else {
-        navigate('/login?message=Google+sign-in+failed.+Please+try+again.', {
+        navigate("/login?message=Google+sign-in+failed.+Please+try+again.", {
           replace: true,
         });
       }
@@ -48,7 +48,9 @@ const GoogleCallbackPage = () => {
     }
 
     if (!code) {
-      navigate('/login?message=Invalid+authentication+response.', { replace: true });
+      navigate("/login?message=Invalid+authentication+response.", {
+        replace: true,
+      });
       return;
     }
 
@@ -56,19 +58,18 @@ const GoogleCallbackPage = () => {
     const exchangeCode = async () => {
       try {
         const { data } = await apiClient.post<TokenResponse>(
-          '/auth/google/exchange',
-          { code }
+          "/auth/google/exchange",
+          { code },
         );
         login(data);
         // Redirect to dashboard — show a welcome message for new users
-        navigate(isNewUser ? '/dashboard?welcome=true' : '/dashboard', {
+        navigate(isNewUser ? "/dashboard?welcome=true" : "/dashboard", {
           replace: true,
         });
       } catch {
-        navigate(
-          '/login?message=Google+sign-in+failed.+Please+try+again.',
-          { replace: true }
-        );
+        navigate("/login?message=Google+sign-in+failed.+Please+try+again.", {
+          replace: true,
+        });
       }
     };
 
@@ -95,13 +96,32 @@ const GoogleCallbackPage = () => {
       </div>
       <div className="text-center">
         <div className="flex items-center gap-2 mb-2">
-          <svg className="animate-spin w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          <svg
+            className="animate-spin w-5 h-5 text-blue-400"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
           </svg>
-          <p className="text-blue-400 font-medium">Signing you in with Google…</p>
+          <p className="text-blue-400 font-medium">
+            Signing you in with Google…
+          </p>
         </div>
-        <p className="text-slate-500 text-sm">Hang tight, this will only take a moment.</p>
+        <p className="text-slate-500 text-sm">
+          Hang tight, this will only take a moment.
+        </p>
       </div>
     </div>
   );
