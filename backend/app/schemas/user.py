@@ -7,6 +7,7 @@ for all user-related API operations.
 
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -77,6 +78,8 @@ class UserResponse(BaseModel):
     id: uuid.UUID = Field(description="The user's unique identifier (UUID v4).")
     name: str     = Field(description="The user's display name.")
     email: EmailStr = Field(description="The user's email address.")
+    avatar_url: Optional[str] = Field(default=None, description="Profile picture URL (Google users only).")
+    auth_provider: str = Field(default="email", description="How the user authenticates: 'email' | 'google' | 'both'.")
     created_at: datetime = Field(description="Timestamp when the account was created (UTC).")
     updated_at: datetime = Field(description="Timestamp of the last profile update (UTC).")
 

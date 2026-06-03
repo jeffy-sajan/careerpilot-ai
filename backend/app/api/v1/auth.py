@@ -6,7 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_async_session, get_current_user
 from app.schemas.user import UserCreate, UserResponse
-from app.schemas.auth import LoginRequest, RefreshRequest, Token
+from app.schemas.auth import (
+    LoginRequest,
+    RefreshRequest,
+    Token,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
 from app.services import auth_service
 from app.models.user import User
 
@@ -43,3 +49,25 @@ async def get_me(
 ):
     """Get the current authenticated user's profile."""
     return current_user
+
+@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Request a password reset email.
+    """
+    await auth_service.request_password_reset(db, request.email)
+    return {"message": "Password reset link has been sent to your email."}
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(
+    request: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Reset a user's password using the token sent to their email.
+    """
+    await auth_service.reset_password(db, request.token, request.new_password)
+    return {"message": "Password successfully reset."}

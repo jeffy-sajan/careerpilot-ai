@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -37,6 +38,14 @@ def create_app() -> FastAPI:
 
     # Add Request Logging Middleware
     app.add_middleware(RequestLoggingMiddleware)
+
+    # Session Middleware — required by authlib for OAuth state storage
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=settings.SESSION_SECRET_KEY,
+        https_only=False,   # Set True in production with HTTPS
+        same_site="lax",
+    )
 
     # CORS Configuration
     app.add_middleware(
