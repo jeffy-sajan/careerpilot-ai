@@ -19,3 +19,11 @@ class ApplicationSource(str, enum.Enum):
     COMPANY_WEBSITE = "COMPANY_WEBSITE"
     REFERRAL = "REFERRAL"
     OTHER = "OTHER"
+
+class ResumeStatus(str, enum.Enum):
+    """Resume upload and parsing statuses."""
+    UPLOADED = "UPLOADED"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+

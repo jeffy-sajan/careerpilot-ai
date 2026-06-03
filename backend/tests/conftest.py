@@ -3,6 +3,8 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
+from sqlalchemy.pool import NullPool
+
 from app.core.config import settings
 from app.database.base import Base
 from app.database.session import get_async_session
@@ -13,8 +15,8 @@ assert "careerpilot_test" in settings.DATABASE_URL
 
 @pytest_asyncio.fixture(scope="session")
 async def engine():
-    engine = create_async_engine(settings.DATABASE_URL, echo=False)
-    # Create all tables once per session
+    engine = create_async_engine(settings.DATABASE_URL, poolclass=NullPool, echo=False)
+    # Create all tables once per session to ensure loop alignment
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)

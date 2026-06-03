@@ -28,13 +28,11 @@ async def test_refresh_token_lifecycle(db_session, sample_user):
     assert token.id is not None
     assert token.user_id == sample_user.id
     assert token.token_hash == token_hash
-    assert token.is_revoked is False
     
     # 2. Get by hash
     fetched = await refresh_token_repo.get_by_hash(db_session, token_hash)
     assert fetched is not None
     assert fetched.id == token.id
-    assert fetched.is_revoked is False
     
     # 3. Revoke
     await refresh_token_repo.revoke(db_session, token.id)

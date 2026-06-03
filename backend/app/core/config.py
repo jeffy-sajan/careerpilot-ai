@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     # This MUST match the URI registered in Google Cloud Console exactly
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
+    
+    # Gemini API
+    GEMINI_API_KEY: str | None = None
 
 
 settings = Settings()
