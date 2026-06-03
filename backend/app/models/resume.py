@@ -2,12 +2,14 @@
 Resume Model.
 """
 import uuid
-from sqlalchemy import ForeignKey, String, Text, Enum, Integer, Index
+
+from sqlalchemy import Enum, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
 from app.models.enums import ResumeStatus
+
 
 class Resume(Base, TimestampMixin):
     __tablename__ = "resumes"

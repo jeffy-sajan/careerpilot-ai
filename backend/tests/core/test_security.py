@@ -1,14 +1,16 @@
-import pytest
-import jwt
 from datetime import datetime, timezone
+
+import jwt
+
+from app.core.config import settings
 from app.core.security import (
-    get_password_hash,
-    verify_password,
     create_access_token,
     create_password_reset_token,
+    get_password_hash,
+    verify_password,
     verify_password_reset_token,
 )
-from app.core.config import settings
+
 
 def test_password_hashing():
     password = "supersecretpassword"

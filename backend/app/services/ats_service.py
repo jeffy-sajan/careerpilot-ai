@@ -1,13 +1,11 @@
 import re
 import uuid
-import json
-from typing import Optional
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from pydantic import BaseModel, Field
 
-from app.core.config import settings
+from fastapi import HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.resume import Resume
 from app.models.resume_analysis import ResumeAnalysis
 
@@ -101,7 +99,10 @@ class ATSService:
         else:
             score -= 10
             weaknesses.append("Lack of quantifiable achievements.")
-            recommendations.append("Use numbers, percentages, or dollar amounts to quantify your impact (e.g., 'Increased sales by 20%').")
+            recommendations.append(
+                "Use numbers, percentages, or dollar amounts to quantify your impact "
+                "(e.g., 'Increased sales by 20%')."
+            )
             
         # 8. Word Count
         word_count = len(clean_text.split())
@@ -123,14 +124,19 @@ class ATSService:
             recommendations.append("Use bullet points rather than long paragraphs for experience descriptions.")
             
         # 10. Action Verbs
-        action_verbs = ["managed", "developed", "led", "created", "designed", "implemented", "increased", "reduced", "optimized", "streamlined", "spearheaded"]
+        action_verbs = [
+            "managed", "developed", "led", "created", "designed",
+            "implemented", "increased", "reduced", "optimized", "streamlined", "spearheaded",
+        ]
         found_verbs = [v for v in action_verbs if v in text_lower]
         if len(found_verbs) >= 3:
             strengths.append(f"Strong action verbs used (e.g., {', '.join(found_verbs[:3])}).")
         else:
             score -= 5
             weaknesses.append("Experience descriptions lack strong action verbs.")
-            recommendations.append("Start your bullet points with strong action verbs (e.g., Developed, Managed, Optimized).")
+            recommendations.append(
+                "Start your bullet points with strong action verbs (e.g., Developed, Managed, Optimized)."
+            )
             
         # Ensure score is within bounds
         score = max(0, min(100, score))

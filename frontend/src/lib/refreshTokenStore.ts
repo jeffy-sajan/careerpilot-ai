@@ -8,7 +8,7 @@
  * never be able to read it, eliminating the XSS risk.
  */
 
-const REFRESH_TOKEN_KEY = 'careerpilot_rt';
+const REFRESH_TOKEN_KEY = "careerpilot_rt";
 
 export const getRefreshToken = (): string | null =>
   localStorage.getItem(REFRESH_TOKEN_KEY);

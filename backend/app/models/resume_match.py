@@ -2,17 +2,21 @@
 Resume Match Model.
 """
 import uuid
+
 from sqlalchemy import Float, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
 
+
 class ResumeMatch(Base, TimestampMixin):
     __tablename__ = "resume_matches"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    resume_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False, index=True)
+    resume_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     job_description_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True
     )

@@ -2,19 +2,19 @@
 FastAPI Dependencies.
 """
 import uuid
-from typing import AsyncGenerator
+
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.database.session import get_async_session
 from app.models.user import User
 from app.repositories import user_repo
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 async def get_current_user(
     db: AsyncSession = Depends(get_async_session),

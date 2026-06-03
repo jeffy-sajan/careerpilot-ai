@@ -1,12 +1,14 @@
-import pytest
 import uuid
+
+import pytest
 from fastapi import HTTPException
-from app.services.ats_service import ATSService, ats_service
-from app.models.resume import Resume
-from app.models.resume_analysis import ResumeAnalysis
+
 from app.models.enums import ResumeStatus
+from app.models.resume import Resume
 from app.schemas.user import UserCreate
 from app.services import auth_service
+from app.services.ats_service import ATSService
+
 
 @pytest.fixture
 async def sample_user(db_session):

@@ -2,18 +2,29 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
-  LayoutDashboard, FileText, ShieldCheck, Target,
-  Kanban, BarChart3, Settings, LogOut,
+  LayoutDashboard,
+  FileText,
+  ShieldCheck,
+  Target,
+  Kanban,
+  BarChart3,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 const nav = [
-  { label: "Dashboard",       to: "/dashboard",        icon: LayoutDashboard, num: "01" },
-  { label: "Resume Analyzer", to: "/resume-analyzer",  icon: FileText,        num: "02" },
-  { label: "ATS Analysis",    to: "/ats-analysis",     icon: ShieldCheck,     num: "03" },
-  { label: "JD Matcher",      to: "/jd-matcher",       icon: Target,          num: "04" },
-  { label: "Job Tracker",     to: "/job-tracker",      icon: Kanban,          num: "05" },
-  { label: "Analytics",       to: "/analytics",        icon: BarChart3,       num: "06" },
-  { label: "Settings",        to: "/settings",         icon: Settings,        num: "07" },
+  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, num: "01" },
+  {
+    label: "Resume Analyzer",
+    to: "/resume-analyzer",
+    icon: FileText,
+    num: "02",
+  },
+  { label: "ATS Analysis", to: "/ats-analysis", icon: ShieldCheck, num: "03" },
+  { label: "JD Matcher", to: "/jd-matcher", icon: Target, num: "04" },
+  { label: "Job Tracker", to: "/job-tracker", icon: Kanban, num: "05" },
+  { label: "Analytics", to: "/analytics", icon: BarChart3, num: "06" },
+  { label: "Settings", to: "/settings", icon: Settings, num: "07" },
 ] as const;
 
 export function AppSidebar() {
@@ -26,7 +37,12 @@ export function AppSidebar() {
   };
 
   const initials = user?.name
-    ? user.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+    ? user.name
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
     : "?";
 
   return (
@@ -36,8 +52,13 @@ export function AppSidebar() {
         <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">
           № 001 — Vol. 26
         </div>
-        <NavLink to="/dashboard" className="mt-3 block font-display text-[28px] leading-[0.9] text-sidebar-primary">
-          Career<br/>Pilot<span className="text-warning">.</span>
+        <NavLink
+          to="/dashboard"
+          className="mt-3 block font-display text-[28px] leading-[0.9] text-sidebar-primary"
+        >
+          Career
+          <br />
+          Pilot<span className="text-warning">.</span>
         </NavLink>
         <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">
           An AI Career Companion
@@ -66,12 +87,18 @@ export function AppSidebar() {
                 >
                   {({ isActive }) => (
                     <>
-                      <span className={`font-mono text-[10px] tabular-nums ${isActive ? "text-warning" : "text-sidebar-foreground/40"}`}>
+                      <span
+                        className={`font-mono text-[10px] tabular-nums ${isActive ? "text-warning" : "text-sidebar-foreground/40"}`}
+                      >
                         {item.num}
                       </span>
                       <Icon className="h-4 w-4 opacity-80" strokeWidth={1.5} />
-                      <span className="flex-1 font-medium tracking-tight">{item.label}</span>
-                      {isActive && <span className="h-1.5 w-1.5 rounded-full bg-warning" />}
+                      <span className="flex-1 font-medium tracking-tight">
+                        {item.label}
+                      </span>
+                      {isActive && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                      )}
                     </>
                   )}
                 </NavLink>
@@ -88,7 +115,9 @@ export function AppSidebar() {
           <p className="mt-2 font-display text-lg leading-tight text-sidebar-primary">
             "Tailored resumes get 3.2× more callbacks."
           </p>
-          <p className="mt-2 text-xs text-sidebar-foreground/50">— Internal data, May 2026</p>
+          <p className="mt-2 text-xs text-sidebar-foreground/50">
+            — Internal data, May 2026
+          </p>
         </div>
       </nav>
 
@@ -99,7 +128,9 @@ export function AppSidebar() {
             {initials}
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <div className="truncate text-sm font-semibold text-sidebar-primary">{user?.name ?? "User"}</div>
+            <div className="truncate text-sm font-semibold text-sidebar-primary">
+              {user?.name ?? "User"}
+            </div>
             <div className="truncate text-[11px] text-sidebar-foreground/50 font-mono uppercase tracking-wider">
               {user?.email ?? ""}
             </div>

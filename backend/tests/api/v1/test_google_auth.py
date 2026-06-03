@@ -1,7 +1,10 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch, AsyncMock
+
 from app.api.v1.google_auth import oauth
+
 
 @pytest.mark.asyncio
 async def test_authorize_redirect(client: AsyncClient):
@@ -72,9 +75,9 @@ async def test_exchange_invalid_code(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_exchange_expired_code(client: AsyncClient, db_session):
     import datetime
-    from app.repositories import google_auth_code_repo
+
+    from app.repositories import google_auth_code_repo, user_repo
     from app.schemas.user import UserCreate
-    from app.repositories import user_repo
     
     # Create user
     user = await user_repo.create(db_session, UserCreate(name="User", email="u@x.com", password="Password123"))

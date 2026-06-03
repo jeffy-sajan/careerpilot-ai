@@ -1,6 +1,6 @@
 /**
  * Authentication TypeScript Types.
- * 
+ *
  * Matches the Pydantic schemas defined in the backend.
  */
 

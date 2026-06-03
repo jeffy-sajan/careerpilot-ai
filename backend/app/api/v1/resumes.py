@@ -3,16 +3,22 @@ Resume API Routes.
 """
 import uuid
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, File, status, BackgroundTasks
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.session import get_async_session
 from app.api.deps import get_current_user
-from app.models.user import User
-from app.schemas.resume import ResumeUploadResponse, ResumeResponse, ResumeListResponse, ResumeAnalysisResponse
-from app.services.resume_service import ResumeService
-from app.services.ats_service import ats_service
 from app.core.storage import LocalStorageProvider
+from app.database.session import get_async_session
+from app.models.user import User
+from app.schemas.resume import (
+    ResumeAnalysisResponse,
+    ResumeListResponse,
+    ResumeResponse,
+    ResumeUploadResponse,
+)
+from app.services.ats_service import ats_service
+from app.services.resume_service import ResumeService
 
 router = APIRouter()
 

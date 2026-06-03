@@ -1,8 +1,10 @@
 import pytest
 from fastapi import HTTPException
-from app.services import auth_service
-from app.schemas.user import UserCreate
+
 from app.repositories import refresh_token_repo
+from app.schemas.user import UserCreate
+from app.services import auth_service
+
 
 @pytest.fixture
 async def sample_user(db_session):
@@ -74,10 +76,10 @@ async def test_refresh_token_invalid(db_session):
 @pytest.mark.asyncio
 async def test_refresh_token_expired(db_session, sample_user, monkeypatch):
     import datetime
-    
+    import secrets
+
     # We create a token manually that is already expired
     from app.services.auth_service import _hash_token
-    import secrets
     rt = secrets.token_urlsafe(32)
     rt_hash = _hash_token(rt)
     # expired 1 day ago

@@ -4,10 +4,12 @@ Refresh Token Repository.
 import uuid
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import select, delete
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.refresh_token import RefreshToken
+
 
 async def create(
     session: AsyncSession, 

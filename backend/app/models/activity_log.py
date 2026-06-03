@@ -2,11 +2,13 @@
 Activity Log Model.
 """
 import uuid
+
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
+
 
 class ActivityLog(Base, TimestampMixin):
     __tablename__ = "activity_logs"

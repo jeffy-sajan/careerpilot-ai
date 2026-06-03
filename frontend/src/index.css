@@ -6,7 +6,8 @@
   * {
     border-color: theme(colors.border);
   }
-  html, body {
+  html,
+  body {
     font-family: theme(fontFamily.sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;

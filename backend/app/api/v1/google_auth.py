@@ -12,17 +12,18 @@ Security:
   - One-time code pattern prevents JWT exposure in URLs
 """
 
+from datetime import datetime, timezone
+
+from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from authlib.integrations.starlette_client import OAuth, OAuthError
 
 from app.api.deps import get_async_session
 from app.core.config import settings
+from app.repositories import google_auth_code_repo, user_repo
 from app.schemas.auth import GoogleExchangeRequest, Token
 from app.services import auth_service
-from app.repositories import user_repo, google_auth_code_repo
-from datetime import datetime, timezone
 
 router = APIRouter()
 

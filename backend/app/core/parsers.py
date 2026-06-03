@@ -2,13 +2,14 @@
 Core Resume Parsers.
 Handles text extraction from PDF and DOCX files.
 """
+import logging
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
+
 import fitz  # PyMuPDF
 from docx import Document
 from docx.opc.exceptions import PackageNotFoundError
-import logging
 
 logger = logging.getLogger(__name__)
 

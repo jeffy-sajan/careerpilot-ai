@@ -3,6 +3,7 @@ Database Enums.
 """
 import enum
 
+
 class ApplicationStatus(str, enum.Enum):
     """Job application lifecycle statuses."""
     SAVED = "SAVED"

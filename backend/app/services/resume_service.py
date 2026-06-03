@@ -3,13 +3,14 @@ Resume Service.
 """
 import uuid
 from typing import Sequence
-from fastapi import UploadFile, HTTPException, BackgroundTasks
+
+from fastapi import BackgroundTasks, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.storage import StorageProvider
-from app.repositories import resume_repo
 from app.models.resume import Resume
-from app.schemas.resume import MAX_FILE_SIZE_BYTES, ALLOWED_MIME_TYPES
+from app.repositories import resume_repo
+from app.schemas.resume import ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES
 
 
 class ResumeService:
@@ -87,9 +88,10 @@ class ResumeService:
         """
         import tempfile
         from pathlib import Path
+
+        from app.core.parsers import DOCXResumeParser, PDFResumeParser
         from app.database.session import async_session_factory
         from app.models.enums import ResumeStatus
-        from app.core.parsers import PDFResumeParser, DOCXResumeParser
 
         async with async_session_factory() as session:
             # 1. Fetch resume record
@@ -115,7 +117,9 @@ class ResumeService:
                     if resume.content_type == "application/pdf":
                         parser = PDFResumeParser()
                         raw_text = parser.extract_text(tmp_path)
-                    elif resume.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                    elif resume.content_type == (
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    ):
                         parser = DOCXResumeParser()
                         raw_text = parser.extract_text(tmp_path)
                     else:
@@ -153,7 +157,9 @@ class ResumeService:
         return resume
 
 
-    async def list_resumes(self, session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Resume]:
+    async def list_resumes(
+        self, session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
+    ) -> Sequence[Resume]:
         """Fetches all resumes for a user."""
         return await resume_repo.get_all_for_user(session, user_id, skip, limit)
 

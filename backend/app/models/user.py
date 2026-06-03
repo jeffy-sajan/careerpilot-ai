@@ -3,9 +3,10 @@ User Model.
 """
 import uuid
 from typing import Optional
-from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
 

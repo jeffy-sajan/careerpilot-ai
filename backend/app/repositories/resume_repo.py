@@ -2,12 +2,14 @@
 Resume Repository.
 """
 import uuid
-from typing import Sequence, Optional
-from sqlalchemy import select, delete as sqlalchemy_delete
+from typing import Optional, Sequence
+
+from sqlalchemy import delete as sqlalchemy_delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.resume import Resume
 from app.models.enums import ResumeStatus
+from app.models.resume import Resume
 
 
 async def create(

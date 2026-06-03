@@ -2,17 +2,21 @@
 Resume Analysis Model.
 """
 import uuid
+
 from sqlalchemy import Float, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
 
+
 class ResumeAnalysis(Base, TimestampMixin):
     __tablename__ = "resume_analyses"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    resume_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False, index=True)
+    resume_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     ats_score: Mapped[float] = mapped_column(Float, nullable=False)
     strengths: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     weaknesses: Mapped[list | None] = mapped_column(JSONB, nullable=True)

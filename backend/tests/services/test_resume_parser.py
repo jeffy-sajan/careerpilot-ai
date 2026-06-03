@@ -1,15 +1,15 @@
-import pytest
-import uuid
 from io import BytesIO
-from unittest.mock import patch, MagicMock
-from fastapi import UploadFile, BackgroundTasks
-from app.services.resume_service import ResumeService
+from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi import BackgroundTasks, UploadFile
+
 from app.core.storage import LocalStorageProvider
-from app.repositories import resume_repo
 from app.models.enums import ResumeStatus
 from app.schemas.user import UserCreate
 from app.services import auth_service
-import app.core.parsers
+from app.services.resume_service import ResumeService
+
 
 @pytest.fixture
 def temp_storage(tmp_path):

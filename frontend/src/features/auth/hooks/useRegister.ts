@@ -1,9 +1,9 @@
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { AxiosError } from 'axios';
-import { authApi } from '../../../lib/api/auth';
-import { useAuth } from '../../../context/AuthContext';
-import { RegisterRequest } from '../../../types/auth';
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { AxiosError } from "axios";
+import { authApi } from "../../../lib/api/auth";
+import { useAuth } from "../../../context/AuthContext";
+import { RegisterRequest } from "../../../types/auth";
 
 export const useRegister = () => {
   const { login } = useAuth();
@@ -22,10 +22,12 @@ export const useRegister = () => {
     },
     onSuccess: (tokens) => {
       login(tokens);
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     },
     onError: (error: AxiosError<{ detail: string }>) => {
-      return error.response?.data?.detail ?? 'Registration failed. Please try again.';
+      return (
+        error.response?.data?.detail ?? "Registration failed. Please try again."
+      );
     },
   });
 };

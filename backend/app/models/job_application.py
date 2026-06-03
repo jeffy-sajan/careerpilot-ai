@@ -3,12 +3,14 @@ Job Application Model.
 """
 import uuid
 from datetime import date
+
 from sqlalchemy import Date, Enum, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, TimestampMixin
 from app.models.enums import ApplicationSource, ApplicationStatus
+
 
 class JobApplication(Base, TimestampMixin):
     __tablename__ = "job_applications"

@@ -1,20 +1,20 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute } from './routes/ProtectedRoute';
-import { PublicRoute } from './routes/PublicRoute';
-import AuthLayout from './layouts/AuthLayout';
-import AppLayout from './layouts/AppLayout';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { PublicRoute } from "./routes/PublicRoute";
+import AuthLayout from "./layouts/AuthLayout";
+import AppLayout from "./layouts/AppLayout";
 
 // Auth pages
-import LoginPage from './features/auth/pages/LoginPage';
-import RegisterPage from './features/auth/pages/RegisterPage';
-import GoogleCallbackPage from './features/auth/pages/GoogleCallbackPage';
-import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
+import LoginPage from "./features/auth/pages/LoginPage";
+import RegisterPage from "./features/auth/pages/RegisterPage";
+import GoogleCallbackPage from "./features/auth/pages/GoogleCallbackPage";
+import ForgotPasswordPage from "./features/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage";
 
 // App pages
-import ResumeAnalyzerPage from './features/resume/pages/ResumeAnalyzerPage';
-import ResumeAnalysisPage from './features/resume/pages/ResumeAnalysisPage';
+import ResumeAnalyzerPage from "./features/resume/pages/ResumeAnalyzerPage";
+import ResumeAnalysisPage from "./features/resume/pages/ResumeAnalysisPage";
 
 // Placeholder for not-yet-built pages
 const ComingSoon = ({ page }: { page: string }) => (
@@ -23,7 +23,8 @@ const ComingSoon = ({ page }: { page: string }) => (
       <p className="eyebrow">Coming soon</p>
       <h1 className="font-display text-3xl text-foreground">{page}</h1>
       <p className="text-sm text-muted-foreground max-w-xs">
-        This section is under construction and will be available in a future phase.
+        This section is under construction and will be available in a future
+        phase.
       </p>
     </div>
   </div>
@@ -45,24 +46,51 @@ function App() {
           </Route>
 
           {/* ── Google OAuth Callback ── */}
-          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+          <Route
+            path="/auth/google/callback"
+            element={<GoogleCallbackPage />}
+          />
 
           {/* ── Protected Routes with App Shell ── */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
-              <Route path="/dashboard"       element={<ComingSoon page="Dashboard" />} />
+              <Route
+                path="/dashboard"
+                element={<ComingSoon page="Dashboard" />}
+              />
               <Route path="/resume-analyzer" element={<ResumeAnalyzerPage />} />
-              <Route path="/resume-analyzer/:id/analysis" element={<ResumeAnalysisPage />} />
-              <Route path="/ats-analysis"    element={<ComingSoon page="ATS Analysis" />} />
-              <Route path="/jd-matcher"      element={<ComingSoon page="JD Matcher" />} />
-              <Route path="/job-tracker"     element={<ComingSoon page="Job Tracker" />} />
-              <Route path="/analytics"       element={<ComingSoon page="Analytics" />} />
-              <Route path="/settings"        element={<ComingSoon page="Settings" />} />
+              <Route
+                path="/resume-analyzer/:id/analysis"
+                element={<ResumeAnalysisPage />}
+              />
+              <Route
+                path="/ats-analysis"
+                element={<ComingSoon page="ATS Analysis" />}
+              />
+              <Route
+                path="/jd-matcher"
+                element={<ComingSoon page="JD Matcher" />}
+              />
+              <Route
+                path="/job-tracker"
+                element={<ComingSoon page="Job Tracker" />}
+              />
+              <Route
+                path="/analytics"
+                element={<ComingSoon page="Analytics" />}
+              />
+              <Route
+                path="/settings"
+                element={<ComingSoon page="Settings" />}
+              />
             </Route>
           </Route>
 
           {/* ── Catch-all ── */}
-          <Route path="*" element={<Navigate to="/resume-analyzer" replace />} />
+          <Route
+            path="*"
+            element={<Navigate to="/resume-analyzer" replace />}
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -70,4 +98,3 @@ function App() {
 }
 
 export default App;
-
