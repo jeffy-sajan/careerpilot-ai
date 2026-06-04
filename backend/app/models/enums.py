@@ -28,3 +28,16 @@ class ResumeStatus(str, enum.Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
+class OptimizationType(str, enum.Enum):
+    """Types of resume optimizations."""
+    KEYWORD = "KEYWORD"
+    BULLET_REWRITE = "BULLET_REWRITE"
+    SKILL_ADDITION = "SKILL_ADDITION"
+    SUMMARY_IMPROVEMENT = "SUMMARY_IMPROVEMENT"
+    ATS_FIX = "ATS_FIX"
+
+class OptimizationStatus(str, enum.Enum):
+    """Status of a proposed optimization."""
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"

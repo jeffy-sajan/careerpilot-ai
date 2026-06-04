@@ -57,3 +57,18 @@ class ResumeAnalysisResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ResumeMatchResponse(BaseModel):
+    id: UUID
+    resume_id: UUID
+    job_description_id: UUID
+    match_score: float
+    matched_skills: list[str] | None
+    missing_skills: list[str] | None
+    missing_keywords: list[str] | None
+    suggestions: list[str] | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
