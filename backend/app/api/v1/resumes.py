@@ -14,10 +14,12 @@ from app.models.user import User
 from app.schemas.resume import (
     ResumeAnalysisResponse,
     ResumeListResponse,
+    ResumeMatchResponse,
     ResumeResponse,
     ResumeUploadResponse,
 )
 from app.services.ats_service import ats_service
+from app.services.match_service import match_service
 from app.services.resume_service import ResumeService
 
 router = APIRouter()
@@ -109,3 +111,31 @@ async def get_resume_analysis(
     Fetches the existing ATS analysis for a resume.
     """
     return await ats_service.get_analysis(db, resume_id, current_user.id)
+
+
+@router.post("/{resume_id}/match/{job_id}", response_model=ResumeMatchResponse)
+async def generate_resume_match(
+    resume_id: uuid.UUID,
+    job_id: uuid.UUID,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Generates a match score and missing skills analysis between a resume and a job description.
+    """
+    return await match_service.generate_match(db, resume_id, job_id, current_user.id)
+
+
+@router.get("/{resume_id}/match/{job_id}", response_model=ResumeMatchResponse)
+async def get_resume_match(
+    resume_id: uuid.UUID,
+    job_id: uuid.UUID,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Fetches an existing match analysis.
+    """
+    return await match_service.get_match(db, resume_id, job_id, current_user.id)
+
+

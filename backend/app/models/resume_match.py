@@ -21,6 +21,7 @@ class ResumeMatch(Base, TimestampMixin):
         ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False, index=True
     )
     match_score: Mapped[float] = mapped_column(Float, nullable=False)
+    matched_skills: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     missing_skills: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     missing_keywords: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     suggestions: Mapped[list | None] = mapped_column(JSONB, nullable=True)

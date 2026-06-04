@@ -7,6 +7,8 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.router import api_router
@@ -14,6 +16,7 @@ from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
+from app.core.rate_limit import limiter
 
 
 @asynccontextmanager
@@ -58,6 +61,10 @@ def create_app() -> FastAPI:
 
     # Exception Handlers
     register_exception_handlers(app)
+    
+    # Rate Limiting
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # API Routers
     app.include_router(api_router, prefix="/api/v1")

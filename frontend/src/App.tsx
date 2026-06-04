@@ -15,6 +15,10 @@ import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage";
 // App pages
 import ResumeAnalyzerPage from "./features/resume/pages/ResumeAnalyzerPage";
 import ResumeAnalysisPage from "./features/resume/pages/ResumeAnalysisPage";
+import JobDescriptionListPage from "./features/jobs/pages/JobDescriptionListPage";
+import JobDescriptionCreatePage from "./features/jobs/pages/JobDescriptionCreatePage";
+import JobDescriptionDetailPage from "./features/jobs/pages/JobDescriptionDetailPage";
+import MatchDashboardPage from "./features/match/pages/MatchDashboardPage";
 
 // Placeholder for not-yet-built pages
 const ComingSoon = ({ page }: { page: string }) => (
@@ -67,9 +71,18 @@ function App() {
                 path="/ats-analysis"
                 element={<ComingSoon page="ATS Analysis" />}
               />
+              <Route path="/jd-matcher" element={<JobDescriptionListPage />} />
               <Route
-                path="/jd-matcher"
-                element={<ComingSoon page="JD Matcher" />}
+                path="/jd-matcher/new"
+                element={<JobDescriptionCreatePage />}
+              />
+              <Route
+                path="/jd-matcher/:id"
+                element={<JobDescriptionDetailPage />}
+              />
+              <Route
+                path="/match/:resumeId/:jobId"
+                element={<MatchDashboardPage />}
               />
               <Route
                 path="/job-tracker"
