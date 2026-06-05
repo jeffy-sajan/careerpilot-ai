@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 # Request Schemas  (data the CLIENT sends TO the API)
 # ─────────────────────────────────────────────────────────────
 
+
 class UserRegisterRequest(BaseModel):
     """
     Payload required to create a new user account.
@@ -55,17 +56,16 @@ class UserRegisterRequest(BaseModel):
         and at least one letter — a lightweight complexity check.
         """
         has_letter = any(c.isalpha() for c in v)
-        has_digit  = any(c.isdigit() for c in v)
+        has_digit = any(c.isdigit() for c in v)
         if not has_letter or not has_digit:
-            raise ValueError(
-                "Password must contain at least one letter and one digit."
-            )
+            raise ValueError("Password must contain at least one letter and one digit.")
         return v
 
 
 # ─────────────────────────────────────────────────────────────
 # Response Schemas  (data the API sends BACK to the client)
 # ─────────────────────────────────────────────────────────────
+
 
 class UserResponse(BaseModel):
     """
@@ -75,7 +75,7 @@ class UserResponse(BaseModel):
     """
 
     id: uuid.UUID = Field(description="The user's unique identifier (UUID v4).")
-    name: str     = Field(description="The user's display name.")
+    name: str = Field(description="The user's display name.")
     email: EmailStr = Field(description="The user's email address.")
     avatar_url: Optional[str] = Field(default=None, description="Profile picture URL (Google users only).")
     auth_provider: str = Field(default="email", description="How the user authenticates: 'email' | 'google' | 'both'.")

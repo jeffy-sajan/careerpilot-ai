@@ -8,6 +8,7 @@ from google.genai import types
 from pydantic import BaseModel, Field
 
 from app.core.config import settings
+from app.schemas.job_application import DashboardInsightResponse
 
 logger = logging.getLogger(__name__)
 
@@ -16,16 +17,14 @@ logger = logging.getLogger(__name__)
 # Structured Output Schema (used by both backend and frontend Gemini calls)
 # ---------------------------------------------------------------------------
 
+
 class LLMSuggestion(BaseModel):
     section: str = Field(description="The section of the resume (e.g., 'Summary', 'Experience', 'Skills').")
     original_text: str = Field(description="The exact original text from the resume being improved.")
     suggested_text: str = Field(description="The rewritten text incorporating the improvements.")
     reasoning: str = Field(description="Why this change is suggested and what impact it has.")
     optimization_type: str = Field(
-        description=(
-            "Type of optimization: KEYWORD, BULLET_REWRITE, SKILL_ADDITION, "
-            "SUMMARY_IMPROVEMENT, or ATS_FIX."
-        )
+        description=("Type of optimization: KEYWORD, BULLET_REWRITE, SKILL_ADDITION, SUMMARY_IMPROVEMENT, or ATS_FIX.")
     )
 
 
@@ -51,14 +50,30 @@ GEMINI_RESPONSE_SCHEMA = {
                     "reasoning": {"type": "string"},
                     "optimization_type": {
                         "type": "string",
-                        "enum": ["KEYWORD", "BULLET_REWRITE", "SKILL_ADDITION", "SUMMARY_IMPROVEMENT", "ATS_FIX"]
-                    }
+                        "enum": ["KEYWORD", "BULLET_REWRITE", "SKILL_ADDITION", "SUMMARY_IMPROVEMENT", "ATS_FIX"],
+                    },
                 },
-                "required": ["section", "original_text", "suggested_text", "reasoning", "optimization_type"]
-            }
+                "required": ["section", "original_text", "suggested_text", "reasoning", "optimization_type"],
+            },
         }
     },
-    "required": ["suggestions"]
+    "required": ["suggestions"],
+}
+
+DASHBOARD_INSIGHT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "insight_text": {"type": "string"},
+        "recommended_actions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"action": {"type": "string"}, "impact": {"type": "string"}},
+                "required": ["action", "impact"],
+            },
+        },
+    },
+    "required": ["insight_text", "recommended_actions"],
 }
 
 
@@ -71,10 +86,7 @@ class OptimizationGeneratorService:
             self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     def build_prompt(
-        self,
-        resume_text: str,
-        ats_analysis: dict[str, Any] | None,
-        jd_match_results: dict[str, Any] | None
+        self, resume_text: str, ats_analysis: dict[str, Any] | None, jd_match_results: dict[str, Any] | None
     ) -> str:
         """
         Assembles the optimization prompt from resume text and analysis data.
@@ -131,9 +143,9 @@ class OptimizationGeneratorService:
             "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
             "HTTP-Referer": "http://localhost:5173",
             "X-Title": "CareerPilot AI",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
+
         # We specify JSON output via prompt and system instruction.
         data = {
             "model": "meta-llama/llama-3-70b-instruct",
@@ -143,26 +155,23 @@ class OptimizationGeneratorService:
                     "content": (
                         "You must respond with ONLY valid JSON matching this schema: "
                         + json.dumps(GEMINI_RESPONSE_SCHEMA)
-                    )
+                    ),
                 },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "user", "content": prompt},
             ],
             "response_format": {"type": "json_object"},
-            "temperature": 0.7
+            "temperature": 0.7,
         }
 
         async with httpx.AsyncClient() as client:
             resp = await client.post(url, headers=headers, json=data, timeout=30.0)
-            
+
             if resp.status_code != 200:
                 raise Exception(f"OpenRouter API failed: {resp.status_code} - {resp.text}")
-                
+
             resp_data = resp.json()
             content = resp_data["choices"][0]["message"]["content"]
-            
+
             try:
                 parsed = json.loads(content)
                 return parsed.get("suggestions", [])
@@ -170,10 +179,7 @@ class OptimizationGeneratorService:
                 raise Exception("Failed to parse OpenRouter response as JSON.")
 
     async def generate_suggestions(
-        self,
-        resume_text: str,
-        ats_analysis: dict[str, Any] | None,
-        jd_match_results: dict[str, Any] | None
+        self, resume_text: str, ats_analysis: dict[str, Any] | None, jd_match_results: dict[str, Any] | None
     ) -> list[dict[str, Any]]:
         """
         Generates structured optimization suggestions.
@@ -211,6 +217,78 @@ class OptimizationGeneratorService:
         except Exception as e:
             logger.error(f"Tier 2 (OpenRouter) failed: {e}")
             # If both failed, we raise a 503 to signal the frontend to offer BYOK
+            raise Exception("503 Service Unavailable (Both Gemini and OpenRouter failed)")
+
+    async def _generate_insight_via_openrouter(self, prompt: str) -> dict[str, Any]:
+        if not settings.OPENROUTER_API_KEY:
+            raise ValueError("OpenRouter API key is not configured.")
+
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+            "HTTP-Referer": "http://localhost:5173",
+            "X-Title": "CareerPilot AI",
+            "Content-Type": "application/json",
+        }
+
+        data = {
+            "model": "meta-llama/llama-3-70b-instruct",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You must respond with ONLY valid JSON matching this schema: "
+                        + json.dumps(DASHBOARD_INSIGHT_SCHEMA)
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.7,
+        }
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, headers=headers, json=data, timeout=30.0)
+            if resp.status_code != 200:
+                raise Exception(f"OpenRouter API failed: {resp.status_code} - {resp.text}")
+
+            resp_data = resp.json()
+            content = resp_data["choices"][0]["message"]["content"]
+
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                raise Exception("Failed to parse OpenRouter response as JSON.")
+
+    async def generate_dashboard_insight(self, metrics: dict[str, Any]) -> dict[str, Any]:
+        prompt = (
+            "You are an expert career coach AI. "
+            f"Here are the candidate's current job search metrics: {json.dumps(metrics)}. "
+            "Write a 1-2 sentence highly personalized, encouraging insight about their performance. "
+            "Also provide 2 recommended actions they should take next (e.g. 'Follow up with recruiter', "
+            "'Tailor resume to more roles') and rate their impact (High Impact, Medium, Low)."
+        )
+
+        if self.client:
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=DashboardInsightResponse,
+                        temperature=0.7,
+                    ),
+                )
+                return json.loads(response.text)
+            except Exception as e:
+                logger.warning(f"Tier 1 Insight (Gemini) failed: {e}")
+
+        logger.info("Attempting Tier 2 (OpenRouter) fallback for insights...")
+        try:
+            return await self._generate_insight_via_openrouter(prompt)
+        except Exception as e:
+            logger.error(f"Tier 2 Insight (OpenRouter) failed: {e}")
             raise Exception("503 Service Unavailable (Both Gemini and OpenRouter failed)")
 
 

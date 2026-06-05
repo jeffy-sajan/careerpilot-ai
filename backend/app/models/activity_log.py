@@ -1,6 +1,7 @@
 """
 Activity Log Model.
 """
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

@@ -1,6 +1,7 @@
 """
 Resume Analysis Model.
 """
+
 import uuid
 
 from sqlalchemy import Float, ForeignKey

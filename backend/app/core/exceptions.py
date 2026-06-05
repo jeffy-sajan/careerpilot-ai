@@ -2,6 +2,7 @@
 Custom exceptions.
 """
 
+
 class AppException(Exception):
     """Base exception for all application errors."""
 
@@ -11,9 +12,11 @@ class AppException(Exception):
         self.status_code = status_code
         super().__init__(self.message)
 
+
 class NotFoundError(AppException):
     def __init__(self, message: str = "Resource not found"):
         super().__init__(message=message, error_code="NOT_FOUND", status_code=404)
+
 
 class ValidationError(AppException):
     def __init__(self, message: str = "Validation error"):

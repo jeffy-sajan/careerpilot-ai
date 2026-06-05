@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { apiClient } from "../../../lib/axios";
 import { useAuth } from "../../../context/AuthContext";
 import { TokenResponse } from "../../../types/auth";
@@ -78,48 +79,27 @@ const GoogleCallbackPage = () => {
 
   // Show a minimal, branded loading screen while the exchange is in progress
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-6">
-      <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/40">
-        <svg
-          className="w-8 h-8 text-white"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      </div>
-      <div className="text-center">
-        <div className="flex items-center gap-2 mb-2">
-          <svg
-            className="animate-spin w-5 h-5 text-blue-400"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
-          <p className="text-blue-400 font-medium">
-            Signing you in with Google…
-          </p>
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 sm:p-10">
+      <div className="w-full max-w-md text-center">
+        <div className="mb-8 flex items-center gap-2 justify-center">
+          <div className="h-7 w-7 grid place-items-center bg-ink text-paper font-display text-sm">
+            C
+          </div>
+          <span className="font-display text-base tracking-tight">
+            CareerPilot
+          </span>
         </div>
-        <p className="text-slate-500 text-sm">
+
+        <div className="flex justify-center mb-6">
+          <div className="w-12 h-12 border border-ink/20 rounded-full flex items-center justify-center mx-auto bg-muted/50">
+            <Loader2 className="w-5 h-5 text-ink animate-spin" />
+          </div>
+        </div>
+
+        <h2 className="font-display text-2xl tracking-tight mb-2">
+          Signing you in...
+        </h2>
+        <p className="text-sm text-muted-foreground">
           Hang tight, this will only take a moment.
         </p>
       </div>

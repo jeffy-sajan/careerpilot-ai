@@ -1,6 +1,7 @@
 """
 Job Description Model.
 """
+
 import uuid
 
 from sqlalchemy import ForeignKey, String, Text

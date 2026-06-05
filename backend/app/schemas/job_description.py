@@ -3,6 +3,7 @@ Job Description Schemas.
 
 Request and Response Pydantic models for the /api/v1/jobs endpoints.
 """
+
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -13,12 +14,14 @@ from pydantic import BaseModel, ConfigDict, Field
 # Request Schemas
 # ---------------------------------------------------------------------------
 
+
 class JobDescriptionCreate(BaseModel):
     """
     Payload to create a new Job Description.
     The user pastes the full job posting text, gives it a title,
     and optionally names the company.
     """
+
     title: str = Field(
         ...,
         min_length=1,
@@ -33,6 +36,7 @@ class JobDescriptionCreate(BaseModel):
     description: str = Field(
         ...,
         min_length=10,
+        max_length=50000,
         description="Full job description text pasted from the job posting",
     )
 
@@ -41,11 +45,13 @@ class JobDescriptionCreate(BaseModel):
 # Response Schemas
 # ---------------------------------------------------------------------------
 
+
 class JobDescriptionResponse(BaseModel):
     """
     Full response for a single Job Description.
     Returned on POST (create) and GET /{id} (detail).
     """
+
     id: UUID
     user_id: UUID
     title: str
@@ -62,6 +68,7 @@ class JobDescriptionListResponse(BaseModel):
     Lightweight response used for the list endpoint (GET /jobs).
     Excludes the full description text to keep list payloads small.
     """
+
     id: UUID
     user_id: UUID
     title: str

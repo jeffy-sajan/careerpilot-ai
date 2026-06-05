@@ -11,15 +11,21 @@ from app.models.user import User
 
 async def _register_and_login(client: AsyncClient, email: str) -> str:
     """Registers a user and returns a valid Bearer token."""
-    await client.post("/api/v1/auth/register", json={
-        "name": "Match Test User",
-        "email": email,
-        "password": "testPassword123",
-    })
-    login_resp = await client.post("/api/v1/auth/login", json={
-        "email": email,
-        "password": "testPassword123",
-    })
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Match Test User",
+            "email": email,
+            "password": "testPassword123",
+        },
+    )
+    login_resp = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": email,
+            "password": "testPassword123",
+        },
+    )
     return login_resp.json()["access_token"]
 
 
@@ -29,6 +35,7 @@ async def test_user_and_token(client: AsyncClient, db_session: AsyncSession):
     token = await _register_and_login(client, email)
     # Fetch user from DB to get ID
     from sqlalchemy import select
+
     result = await db_session.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     return user, token
@@ -46,7 +53,8 @@ async def sample_resume(db_session: AsyncSession, test_user_and_token) -> Resume
         content_type="application/pdf",
         file_size_bytes=1024,
         file_url="/tmp/test_resume.pdf",
-        raw_text="I am a highly skilled senior engineer. I have over 5 years of experience using Python, FastAPI, and PostgreSQL. I have managed a large team of developers and driven product growth. " * 3, # Duplicate to ensure > 30 words
+        raw_text="I am a highly skilled senior engineer. I have over 5 years of experience using Python, FastAPI, and PostgreSQL. I have managed a large team of developers and driven product growth. "
+        * 3,  # Duplicate to ensure > 30 words
     )
     db_session.add(resume)
     await db_session.commit()
@@ -62,7 +70,8 @@ async def sample_jd(db_session: AsyncSession, test_user_and_token) -> JobDescrip
         user_id=user.id,
         title="Senior Backend Engineer",
         company="Acme Corp",
-        description="We are seeking a senior backend engineer. You must have strong experience with Python and PostgreSQL. You will be managing a team of developers and driving product growth. " * 3, # Duplicate to ensure > 30 words
+        description="We are seeking a senior backend engineer. You must have strong experience with Python and PostgreSQL. You will be managing a team of developers and driving product growth. "
+        * 3,  # Duplicate to ensure > 30 words
     )
     db_session.add(jd)
     await db_session.commit()
@@ -81,13 +90,13 @@ async def test_generate_match_success(
     _, token = test_user_and_token
     headers = {"Authorization": f"Bearer {token}"}
     response = await client.post(f"/api/v1/resumes/{sample_resume.id}/match/{sample_jd.id}", headers=headers)
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "match_score" in data
     assert "matched_skills" in data
     assert "missing_skills" in data
-    
+
     # Python and PostgreSQL should be matched
     assert "Python" in data["matched_skills"]
     assert "PostgreSQL" in data["matched_skills"]
@@ -103,7 +112,7 @@ async def test_generate_match_insufficient_text(
     """Test the edge case guardrail when resume text is too short."""
     user, token = test_user_and_token
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     short_resume = Resume(
         user_id=user.id,
         file_name="short.pdf",
@@ -117,7 +126,7 @@ async def test_generate_match_insufficient_text(
     db_session.add(short_resume)
     await db_session.commit()
     await db_session.refresh(short_resume)
-    
+
     response = await client.post(f"/api/v1/resumes/{short_resume.id}/match/{sample_jd.id}", headers=headers)
     assert response.status_code == 400
     assert "Insufficient text" in response.json()["detail"]
@@ -133,18 +142,19 @@ async def test_generate_match_ownership_validation(
     """Test that a user cannot match a resume they don't own."""
     user, token = test_user_and_token
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     # Create a resume owned by a DIFFERENT user
     other_email = f"other_{uuid.uuid4()}@example.com"
     await _register_and_login(client, other_email)
-    
+
     from sqlalchemy import select
 
     from app.models.user import User
+
     result = await db_session.execute(select(User).where(User.email == other_email))
     other_user = result.scalars().first()
     other_user_id = other_user.id
-    
+
     other_resume = Resume(
         user_id=other_user_id,
         file_name="other.pdf",
@@ -158,7 +168,7 @@ async def test_generate_match_ownership_validation(
     db_session.add(other_resume)
     await db_session.commit()
     await db_session.refresh(other_resume)
-    
+
     # Attempting to match it with the current user's token should 404
     response = await client.post(f"/api/v1/resumes/{other_resume.id}/match/{sample_jd.id}", headers=headers)
     assert response.status_code == 404
@@ -174,10 +184,10 @@ async def test_get_existing_match(
     """Test retrieving an already generated match."""
     _, token = test_user_and_token
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     # First generate it
     await client.post(f"/api/v1/resumes/{sample_resume.id}/match/{sample_jd.id}", headers=headers)
-    
+
     # Then get it
     response = await client.get(f"/api/v1/resumes/{sample_resume.id}/match/{sample_jd.id}", headers=headers)
     assert response.status_code == 200

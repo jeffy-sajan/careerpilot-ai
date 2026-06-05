@@ -5,6 +5,7 @@ Provides async CRUD operations against the job_descriptions table.
 All write operations bake in user ownership enforcement so the service
 layer never has to remember to do it manually.
 """
+
 import uuid
 from typing import Optional, Sequence
 

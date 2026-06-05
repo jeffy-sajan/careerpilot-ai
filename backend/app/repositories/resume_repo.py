@@ -1,6 +1,7 @@
 """
 Resume Repository.
 """
+
 import uuid
 from typing import Optional, Sequence
 
@@ -31,7 +32,7 @@ async def create(
         content_type=content_type,
         file_size_bytes=file_size_bytes,
         status=status,
-        # Populate legacy fields to satisfy existing NOT NULL constraints 
+        # Populate legacy fields to satisfy existing NOT NULL constraints
         # (until they are officially dropped in a future cleanup)
         file_name=original_file_name,
         file_url=storage_path,
@@ -42,59 +43,34 @@ async def create(
     return resume
 
 
-async def get_by_id(
-    session: AsyncSession, 
-    resume_id: uuid.UUID, 
-    user_id: uuid.UUID
-) -> Optional[Resume]:
+async def get_by_id(session: AsyncSession, resume_id: uuid.UUID, user_id: uuid.UUID) -> Optional[Resume]:
     """
-    Fetches a specific resume by ID. 
+    Fetches a specific resume by ID.
     Enforces user ownership.
     """
-    result = await session.execute(
-        select(Resume).where(
-            Resume.id == resume_id,
-            Resume.user_id == user_id
-        )
-    )
+    result = await session.execute(select(Resume).where(Resume.id == resume_id, Resume.user_id == user_id))
     return result.scalars().first()
 
 
 async def get_all_for_user(
-    session: AsyncSession, 
-    user_id: uuid.UUID, 
-    skip: int = 0, 
-    limit: int = 100
+    session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> Sequence[Resume]:
     """
     Fetches all resumes for a specific user, sorted by creation date (newest first).
     Supports pagination via skip and limit.
     """
     result = await session.execute(
-        select(Resume)
-        .where(Resume.user_id == user_id)
-        .order_by(Resume.created_at.desc())
-        .offset(skip)
-        .limit(limit)
+        select(Resume).where(Resume.user_id == user_id).order_by(Resume.created_at.desc()).offset(skip).limit(limit)
     )
     return result.scalars().all()
 
 
-async def delete(
-    session: AsyncSession, 
-    resume_id: uuid.UUID, 
-    user_id: uuid.UUID
-) -> bool:
+async def delete(session: AsyncSession, resume_id: uuid.UUID, user_id: uuid.UUID) -> bool:
     """
     Deletes a specific resume by ID.
     Enforces user ownership.
     Returns True if a row was deleted, False otherwise.
     """
-    result = await session.execute(
-        sqlalchemy_delete(Resume).where(
-            Resume.id == resume_id,
-            Resume.user_id == user_id
-        )
-    )
+    result = await session.execute(sqlalchemy_delete(Resume).where(Resume.id == resume_id, Resume.user_id == user_id))
     await session.commit()
     return result.rowcount > 0

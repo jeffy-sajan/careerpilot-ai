@@ -5,6 +5,7 @@ CareerPilot AI — FastAPI Application Factory
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -15,8 +16,16 @@ from app.api.router import api_router
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import setup_logging
-from app.core.middleware import RequestLoggingMiddleware
+from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.core.rate_limit import limiter
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
 
 
 @asynccontextmanager
@@ -42,11 +51,14 @@ def create_app() -> FastAPI:
     # Add Request Logging Middleware
     app.add_middleware(RequestLoggingMiddleware)
 
+    # Add Security Headers Middleware
+    app.add_middleware(SecurityHeadersMiddleware)
+
     # Session Middleware — required by authlib for OAuth state storage
     app.add_middleware(
         SessionMiddleware,
         secret_key=settings.SESSION_SECRET_KEY,
-        https_only=False,   # Set True in production with HTTPS
+        https_only=False,  # Set True in production with HTTPS
         same_site="lax",
     )
 
@@ -61,7 +73,7 @@ def create_app() -> FastAPI:
 
     # Exception Handlers
     register_exception_handlers(app)
-    
+
     # Rate Limiting
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

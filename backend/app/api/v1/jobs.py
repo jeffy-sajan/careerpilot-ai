@@ -5,6 +5,7 @@ All endpoints are JWT-protected via the `get_current_user` dependency.
 User ownership is enforced in the service layer — the router only handles
 HTTP concerns (status codes, request/response serialisation).
 """
+
 import uuid
 from typing import List
 

@@ -1,6 +1,7 @@
 """
 FastAPI Dependencies.
 """
+
 import uuid
 
 import jwt
@@ -16,18 +17,14 @@ from app.repositories import user_repo
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-async def get_current_user(
-    db: AsyncSession = Depends(get_async_session),
-    token: str = Depends(oauth2_scheme)
-) -> User:
+
+async def get_current_user(db: AsyncSession = Depends(get_async_session), token: str = Depends(oauth2_scheme)) -> User:
     """
     Dependency to get the current authenticated user.
     Decodes the JWT, extracts the user ID, and fetches from the database.
     """
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id_str: str = payload.get("sub")
         if user_id_str is None:
             raise HTTPException(
@@ -40,7 +37,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
         )
-    
+
     user = await user_repo.get_by_id(db, user_id=user_uuid)
     if not user:
         raise HTTPException(

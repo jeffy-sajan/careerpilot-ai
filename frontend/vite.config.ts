@@ -10,6 +10,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          sentry: ["@sentry/react"],
+          recharts: ["recharts"],
+          ui: ["lucide-react"],
+        },
+      },
+    },
+  },
   server: {
     host: true, // Needed for docker
     port: 5173,

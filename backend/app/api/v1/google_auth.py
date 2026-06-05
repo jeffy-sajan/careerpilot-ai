@@ -15,12 +15,13 @@ Security:
 from datetime import datetime, timezone
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_async_session
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.repositories import google_auth_code_repo, user_repo
 from app.schemas.auth import GoogleExchangeRequest, Token
 from app.services import auth_service
@@ -36,12 +37,13 @@ oauth.register(
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={
         "scope": "openid email profile",
-        "prompt": "select_account",   # Always show account picker
+        "prompt": "select_account",  # Always show account picker
     },
 )
 
 
 @router.get("/authorize")
+@limiter.limit("10/minute")
 async def google_authorize(request: Request):
     """
     Step 1: Redirect the user's browser to Google's consent screen.
@@ -76,21 +78,17 @@ async def google_callback(
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
         # Google denied access or state mismatch (possible CSRF)
-        return RedirectResponse(
-            url=f"{frontend_url}/login?error=google_auth_failed&detail={str(e.error)}"
-        )
+        return RedirectResponse(url=f"{frontend_url}/login?error=google_auth_failed&detail={str(e.error)}")
 
     # Google's ID token contains verified user info
     user_info = token.get("userinfo")
     if not user_info:
-        return RedirectResponse(
-            url=f"{frontend_url}/login?error=google_auth_failed&detail=no_user_info"
-        )
+        return RedirectResponse(url=f"{frontend_url}/login?error=google_auth_failed&detail=no_user_info")
 
-    google_id = user_info.get("sub")        # Google's unique user ID
-    email     = user_info.get("email")
-    name      = user_info.get("name") or email.split("@")[0]
-    picture   = user_info.get("picture")
+    google_id = user_info.get("sub")  # Google's unique user ID
+    email = user_info.get("email")
+    name = user_info.get("name") or email.split("@")[0]
+    picture = user_info.get("picture")
 
     try:
         user, is_new_user = await user_repo.get_or_create_google_user(
@@ -103,9 +101,7 @@ async def google_callback(
     except ValueError as e:
         # Email already registered with a different provider
         error_type = str(e).split(":")[0]
-        return RedirectResponse(
-            url=f"{frontend_url}/login?error={error_type}"
-        )
+        return RedirectResponse(url=f"{frontend_url}/login?error={error_type}")
 
     # Create a one-time code — frontend will exchange this for a JWT pair
     auth_code = await google_auth_code_repo.create(
@@ -115,13 +111,14 @@ async def google_callback(
     )
 
     redirect_params = f"code={auth_code.code}&is_new_user={str(is_new_user).lower()}"
-    return RedirectResponse(
-        url=f"{frontend_url}/auth/google/callback?{redirect_params}"
-    )
+    return RedirectResponse(url=f"{frontend_url}/auth/google/callback?{redirect_params}")
 
 
 @router.post("/exchange", response_model=Token)
+@limiter.limit("10/minute")
 async def google_exchange(
+    request: Request,
+    response: Response,
     body: GoogleExchangeRequest,
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -157,4 +154,16 @@ async def google_exchange(
     await google_auth_code_repo.delete_by_id(db, db_code.id)
 
     # Issue a normal JWT + refresh token pair
-    return await auth_service.create_tokens(db, user_id)
+    token_response, refresh_token_str = await auth_service.create_tokens(db, user_id)
+
+    from app.core.config import settings
+
+    response.set_cookie(
+        key="careerpilot_rt",
+        value=refresh_token_str,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production",
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+    )
+    return token_response

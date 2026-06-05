@@ -1,13 +1,15 @@
 """
 Resume API Routes.
 """
+
 import uuid
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter
 from app.core.storage import LocalStorageProvider
 from app.database.session import get_async_session
 from app.models.user import User
@@ -24,19 +26,23 @@ from app.services.resume_service import ResumeService
 
 router = APIRouter()
 
+
 # Dependency to inject the service layer
 def get_resume_service() -> ResumeService:
     # In the future, you can swap this with SupabaseStorageProvider based on a settings flag
     storage = LocalStorageProvider(base_dir="uploads")
     return ResumeService(storage_provider=storage)
 
+
 @router.post("/", response_model=ResumeUploadResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def upload_resume(
+    request: Request,
     file: UploadFile = File(...),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
-    resume_service: ResumeService = Depends(get_resume_service)
+    resume_service: ResumeService = Depends(get_resume_service),
 ):
     """
     Uploads a new resume (PDF or DOCX).
@@ -52,7 +58,7 @@ async def list_resumes(
     limit: int = 100,
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
-    resume_service: ResumeService = Depends(get_resume_service)
+    resume_service: ResumeService = Depends(get_resume_service),
 ):
     """
     Lists all resumes uploaded by the authenticated user.
@@ -66,7 +72,7 @@ async def get_resume(
     resume_id: uuid.UUID,
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
-    resume_service: ResumeService = Depends(get_resume_service)
+    resume_service: ResumeService = Depends(get_resume_service),
 ):
     """
     Retrieves detailed metadata for a specific resume.
@@ -80,7 +86,7 @@ async def delete_resume(
     resume_id: uuid.UUID,
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
-    resume_service: ResumeService = Depends(get_resume_service)
+    resume_service: ResumeService = Depends(get_resume_service),
 ):
     """
     Deletes a resume record and its associated physical file.
@@ -90,7 +96,9 @@ async def delete_resume(
 
 
 @router.post("/{resume_id}/analyze", response_model=ResumeAnalysisResponse)
+@limiter.limit("10/hour")
 async def analyze_resume(
+    request: Request,
     resume_id: uuid.UUID,
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
@@ -137,5 +145,3 @@ async def get_resume_match(
     Fetches an existing match analysis.
     """
     return await match_service.get_match(db, resume_id, job_id, current_user.id)
-
-

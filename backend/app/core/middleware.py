@@ -2,6 +2,7 @@
 Custom ASGI Middlewares.
 Pure ASGI implementations to prevent loop-crossing bugs associated with BaseHTTPMiddleware in test environments.
 """
+
 import logging
 import time
 import uuid
@@ -27,14 +28,14 @@ class RequestLoggingMiddleware:
             return
 
         request_id = str(uuid.uuid4())
-        
+
         # Attach request_id to request state scope
         if "state" not in scope:
             scope["state"] = {}
         scope["state"]["request_id"] = request_id
 
         start_time = time.perf_counter()
-        
+
         # Extract metadata from ASGI scope
         client = scope.get("client")
         client_host = client[0] if client else "unknown"
@@ -55,7 +56,7 @@ class RequestLoggingMiddleware:
             if message["type"] == "http.response.start":
                 status_code = message.get("status", 200)
                 process_time = (time.perf_counter() - start_time) * 1000  # ms
-                
+
                 logger.info(
                     f"Completed request {method} {url_path} with status {status_code}",
                     extra={
@@ -66,12 +67,12 @@ class RequestLoggingMiddleware:
                         "duration_ms": round(process_time, 2),
                     },
                 )
-                
+
                 # Inject X-Request-ID into response headers
                 headers = list(message.get("headers", []))
                 headers.append((b"x-request-id", request_id.encode()))
                 message["headers"] = headers
-                
+
             await send(message)
 
         try:
@@ -89,3 +90,36 @@ class RequestLoggingMiddleware:
                 },
             )
             raise exc
+
+
+class SecurityHeadersMiddleware:
+    """
+    Pure ASGI middleware to inject security headers.
+    """
+
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                headers.extend(
+                    [
+                        (b"x-content-type-options", b"nosniff"),
+                        (b"x-frame-options", b"DENY"),
+                        (b"referrer-policy", b"strict-origin-when-cross-origin"),
+                        (
+                            b"content-security-policy",
+                            b"default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://accounts.google.com",
+                        ),
+                    ]
+                )
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)

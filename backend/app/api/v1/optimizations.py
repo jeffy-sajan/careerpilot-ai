@@ -1,6 +1,7 @@
 """
 Optimization API Routes.
 """
+
 import logging
 import uuid
 
@@ -32,6 +33,7 @@ router = APIRouter()
 # Helper: fetch ATS + JD context for a resume
 # ---------------------------------------------------------------------------
 
+
 async def _fetch_analysis_context(
     db: AsyncSession,
     resume_id: uuid.UUID,
@@ -59,7 +61,7 @@ async def _fetch_analysis_context(
         if match_record:
             jd_match = {
                 "missing_skills": match_record.missing_skills,
-                "missing_keywords": match_record.missing_keywords
+                "missing_keywords": match_record.missing_keywords,
             }
 
     return ats_analysis, jd_match
@@ -69,13 +71,14 @@ async def _fetch_analysis_context(
 # POST /resumes/{resume_id}/optimize  — Platform key generation (existing)
 # ---------------------------------------------------------------------------
 
+
 @router.post(
     "/resumes/{resume_id}/optimize",
     response_model=OptimizationRunResponse,
     status_code=status.HTTP_201_CREATED,
-    tags=["Resume Optimizations"]
+    tags=["Resume Optimizations"],
 )
-@limiter.limit("5/minute")
+@limiter.limit("5/hour")
 async def generate_resume_optimizations(
     request: Request,
     resume_id: uuid.UUID,
@@ -95,24 +98,24 @@ async def generate_resume_optimizations(
 
     try:
         suggestions_raw = await optimization_generator_service.generate_suggestions(
-            resume_text=resume.raw_text,
-            ats_analysis=ats_analysis,
-            jd_match_results=jd_match
+            resume_text=resume.raw_text, ats_analysis=ats_analysis, jd_match_results=jd_match
         )
     except Exception as e:
         logger.error(f"Error generating optimizations: {e}", exc_info=True)
         error_msg = str(e)
-        if "503" in error_msg or "temporary" in error_msg.lower():
+        if (
+            "503" in error_msg
+            or "temporary" in error_msg.lower()
+            or "quota" in error_msg.lower()
+            or "rate" in error_msg.lower()
+        ):
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=(
-                    "CareerPilot AI quota is currently exhausted. "
-                    "You can try again later or use your own Gemini API key."
-                )
+                detail="Optimization service is temporarily unavailable due to high demand. Please try again later.",
             )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail=f"Failed to generate optimizations: {error_msg}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Optimization service encountered an unexpected error. Please try again later.",
         )
 
     run = await optimization_repo.create_many(
@@ -121,9 +124,9 @@ async def generate_resume_optimizations(
         job_id=job_id,
         model_name=optimization_generator_service.model_name,
         prompt_version=optimization_generator_service.prompt_version,
-        suggestions=suggestions_raw
+        suggestions=suggestions_raw,
     )
-    
+
     return run
 
 
@@ -131,11 +134,8 @@ async def generate_resume_optimizations(
 # GET /resumes/{resume_id}/optimize/prompt  — BYOK prompt endpoint (new)
 # ---------------------------------------------------------------------------
 
-@router.get(
-    "/resumes/{resume_id}/optimize/prompt",
-    response_model=PromptResponse,
-    tags=["Resume Optimizations"]
-)
+
+@router.get("/resumes/{resume_id}/optimize/prompt", response_model=PromptResponse, tags=["Resume Optimizations"])
 async def get_optimization_prompt(
     resume_id: uuid.UUID,
     job_id: uuid.UUID | None = Query(None, description="Optional job description ID to optimize against"),
@@ -157,9 +157,7 @@ async def get_optimization_prompt(
     ats_analysis, jd_match = await _fetch_analysis_context(db, resume_id, current_user.id, job_id)
 
     prompt = optimization_generator_service.build_prompt(
-        resume_text=resume.raw_text,
-        ats_analysis=ats_analysis,
-        jd_match_results=jd_match
+        resume_text=resume.raw_text, ats_analysis=ats_analysis, jd_match_results=jd_match
     )
 
     return PromptResponse(
@@ -173,11 +171,12 @@ async def get_optimization_prompt(
 # POST /resumes/{resume_id}/optimize/save  — BYOK save endpoint (new)
 # ---------------------------------------------------------------------------
 
+
 @router.post(
     "/resumes/{resume_id}/optimize/save",
     response_model=OptimizationRunResponse,
     status_code=status.HTTP_201_CREATED,
-    tags=["Resume Optimizations"]
+    tags=["Resume Optimizations"],
 )
 async def save_byok_optimizations(
     resume_id: uuid.UUID,
@@ -215,10 +214,9 @@ async def save_byok_optimizations(
 # GET /resumes/{resume_id}/optimizations  — List (existing)
 # ---------------------------------------------------------------------------
 
+
 @router.get(
-    "/resumes/{resume_id}/optimizations",
-    response_model=OptimizationListResponse,
-    tags=["Resume Optimizations"]
+    "/resumes/{resume_id}/optimizations", response_model=OptimizationListResponse, tags=["Resume Optimizations"]
 )
 async def list_resume_optimizations(
     resume_id: uuid.UUID,
@@ -231,7 +229,7 @@ async def list_resume_optimizations(
     resume = await resume_repo.get_by_id(db, resume_id, current_user.id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-        
+
     optimizations = await optimization_repo.get_for_resume(db, resume_id)
     return OptimizationListResponse(optimizations=list(optimizations), total_count=len(optimizations))
 
@@ -240,10 +238,9 @@ async def list_resume_optimizations(
 # PATCH /optimizations/{optimization_id}/status  — Update status (existing)
 # ---------------------------------------------------------------------------
 
+
 @router.patch(
-    "/optimizations/{optimization_id}/status",
-    response_model=OptimizationResponse,
-    tags=["Resume Optimizations"]
+    "/optimizations/{optimization_id}/status", response_model=OptimizationResponse, tags=["Resume Optimizations"]
 )
 async def update_optimization_status(
     optimization_id: uuid.UUID,
@@ -255,10 +252,7 @@ async def update_optimization_status(
     Updates the status (e.g. ACCEPTED, REJECTED) of a specific optimization suggestion.
     """
     opt = await optimization_repo.update_status(
-        session=db, 
-        optimization_id=optimization_id, 
-        status=request.status,
-        user_id=current_user.id
+        session=db, optimization_id=optimization_id, status=request.status, user_id=current_user.id
     )
     if not opt:
         raise HTTPException(status_code=404, detail="Optimization not found")

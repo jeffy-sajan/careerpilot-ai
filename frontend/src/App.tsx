@@ -1,9 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
 import AuthLayout from "./layouts/AuthLayout";
 import AppLayout from "./layouts/AppLayout";
+import { Topbar } from "./components/ui-kit";
+import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
+import NotFoundPage from "./pages/NotFoundPage";
 
 // Auth pages
 import LoginPage from "./features/auth/pages/LoginPage";
@@ -19,94 +22,106 @@ import JobDescriptionListPage from "./features/jobs/pages/JobDescriptionListPage
 import JobDescriptionCreatePage from "./features/jobs/pages/JobDescriptionCreatePage";
 import JobDescriptionDetailPage from "./features/jobs/pages/JobDescriptionDetailPage";
 import MatchDashboardPage from "./features/match/pages/MatchDashboardPage";
+import ApplicationListPage from "./features/applications/pages/ApplicationListPage";
+import ApplicationDetailPage from "./features/applications/pages/ApplicationDetailPage";
+import DashboardPage from "./features/dashboard/pages/DashboardPage";
 
 // Placeholder for not-yet-built pages
 const ComingSoon = ({ page }: { page: string }) => (
-  <div className="flex flex-1 items-center justify-center min-h-screen">
-    <div className="text-center space-y-3">
-      <p className="eyebrow">Coming soon</p>
-      <h1 className="font-display text-3xl text-foreground">{page}</h1>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        This section is under construction and will be available in a future
-        phase.
-      </p>
+  <div className="flex flex-col flex-1 h-full">
+    <Topbar title={page} />
+    <div className="flex flex-1 items-center justify-center">
+      <div className="text-center space-y-3">
+        <p className="eyebrow">Coming soon</p>
+        <h1 className="font-display text-3xl text-foreground">{page}</h1>
+        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+          This section is under construction and will be available in a future
+          phase.
+        </p>
+      </div>
     </div>
   </div>
 );
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* ── Public Routes ── */}
-          <Route element={<PublicRoute />}>
-            <Route element={<AuthLayout />}>
+    <GlobalErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* ── Public Routes ── */}
+            <Route element={<PublicRoute />}>
+              {/* New full-screen auth designs */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+              {/* Legacy boxed layouts */}
+              <Route element={<AuthLayout />}>
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* ── Google OAuth Callback ── */}
-          <Route
-            path="/auth/google/callback"
-            element={<GoogleCallbackPage />}
-          />
+            {/* ── Google OAuth Callback ── */}
+            <Route
+              path="/auth/google/callback"
+              element={<GoogleCallbackPage />}
+            />
 
-          {/* ── Protected Routes with App Shell ── */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route
-                path="/dashboard"
-                element={<ComingSoon page="Dashboard" />}
-              />
-              <Route path="/resume-analyzer" element={<ResumeAnalyzerPage />} />
-              <Route
-                path="/resume-analyzer/:id/analysis"
-                element={<ResumeAnalysisPage />}
-              />
-              <Route
-                path="/ats-analysis"
-                element={<ComingSoon page="ATS Analysis" />}
-              />
-              <Route path="/jd-matcher" element={<JobDescriptionListPage />} />
-              <Route
-                path="/jd-matcher/new"
-                element={<JobDescriptionCreatePage />}
-              />
-              <Route
-                path="/jd-matcher/:id"
-                element={<JobDescriptionDetailPage />}
-              />
-              <Route
-                path="/match/:resumeId/:jobId"
-                element={<MatchDashboardPage />}
-              />
-              <Route
-                path="/job-tracker"
-                element={<ComingSoon page="Job Tracker" />}
-              />
-              <Route
-                path="/analytics"
-                element={<ComingSoon page="Analytics" />}
-              />
-              <Route
-                path="/settings"
-                element={<ComingSoon page="Settings" />}
-              />
+            {/* ── Protected Routes with App Shell ── */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route
+                  path="/resume-analyzer"
+                  element={<ResumeAnalyzerPage />}
+                />
+                <Route
+                  path="/resume-analyzer/:id/analysis"
+                  element={<ResumeAnalysisPage />}
+                />
+                <Route
+                  path="/ats-analysis"
+                  element={<ComingSoon page="ATS Analysis" />}
+                />
+                <Route
+                  path="/jd-matcher"
+                  element={<JobDescriptionListPage />}
+                />
+                <Route
+                  path="/jd-matcher/new"
+                  element={<JobDescriptionCreatePage />}
+                />
+                <Route
+                  path="/jd-matcher/:id"
+                  element={<JobDescriptionDetailPage />}
+                />
+                <Route
+                  path="/match/:resumeId/:jobId"
+                  element={<MatchDashboardPage />}
+                />
+                <Route path="/job-tracker" element={<ApplicationListPage />} />
+                <Route
+                  path="/job-tracker/:id"
+                  element={<ApplicationDetailPage />}
+                />
+                <Route
+                  path="/analytics"
+                  element={<ComingSoon page="Analytics" />}
+                />
+                <Route
+                  path="/settings"
+                  element={<ComingSoon page="Settings" />}
+                />
+              </Route>
             </Route>
-          </Route>
 
-          {/* ── Catch-all ── */}
-          <Route
-            path="*"
-            element={<Navigate to="/resume-analyzer" replace />}
-          />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* ── Catch-all ── */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </GlobalErrorBoundary>
   );
 }
 

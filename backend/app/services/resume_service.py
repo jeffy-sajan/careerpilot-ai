@@ -1,6 +1,7 @@
 """
 Resume Service.
 """
+
 import uuid
 from typing import Sequence
 
@@ -18,45 +19,30 @@ class ResumeService:
         self.storage_provider = storage_provider
 
     async def upload_resume(
-        self, 
-        session: AsyncSession, 
-        user_id: uuid.UUID, 
-        file: UploadFile,
-        background_tasks: BackgroundTasks
+        self, session: AsyncSession, user_id: uuid.UUID, file: UploadFile, background_tasks: BackgroundTasks
     ) -> Resume:
         """
-        Validates the uploaded file, saves it via the storage provider, 
+        Validates the uploaded file, saves it via the storage provider,
         and creates a database record. Enqueues a background parsing task.
         Rollbacks physical file on DB failure.
         """
         # 1 & 2. Validate File
         if not file.content_type or file.content_type not in ALLOWED_MIME_TYPES:
-            raise HTTPException(
-                status_code=415, 
-                detail="Unsupported file type. Only PDF and DOCX are allowed."
-            )
+            raise HTTPException(status_code=415, detail="Unsupported file type. Only PDF and DOCX are allowed.")
 
         file_bytes = await file.read()
         file_size = len(file_bytes)
 
         if file_size > MAX_FILE_SIZE_BYTES:
-            raise HTTPException(
-                status_code=413, 
-                detail="File size exceeds the 5MB limit."
-            )
-            
+            raise HTTPException(status_code=413, detail="File size exceeds the 5MB limit.")
+
         if file_size == 0:
-            raise HTTPException(
-                status_code=400,
-                detail="File is empty."
-            )
+            raise HTTPException(status_code=400, detail="File is empty.")
 
         # 3 & 4. Save file via StorageProvider
         try:
             storage_path, file_url = await self.storage_provider.save_file(
-                file_bytes=file_bytes, 
-                user_id=user_id, 
-                original_filename=file.filename or "unknown"
+                file_bytes=file_bytes, user_id=user_id, original_filename=file.filename or "unknown"
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Storage error: {str(e)}")
@@ -73,7 +59,7 @@ class ResumeService:
             )
             # Trigger background parsing task
             background_tasks.add_task(self.parse_resume_task, resume.id, user_id)
-            
+
             return resume
         except Exception as e:
             # Rollback storage if DB insert fails
@@ -102,11 +88,11 @@ class ResumeService:
             # 2. Update status to PROCESSING
             resume.status = ResumeStatus.PROCESSING
             await session.commit()
-            
+
             try:
                 # 3. Read file bytes from storage provider
                 file_bytes = await self.storage_provider.read_file(resume.storage_path)
-                
+
                 # 4. Extract text by writing to a temporary file
                 with tempfile.NamedTemporaryFile(delete=False, suffix=Path(resume.original_file_name).suffix) as tmp:
                     tmp.write(file_bytes)
@@ -131,23 +117,20 @@ class ResumeService:
 
                 # 5. Check if we extracted any text
                 if not raw_text:
-                    raise ValueError(
-                        "No extractable text found in resume. The document might be scanned or empty."
-                    )
+                    raise ValueError("No extractable text found in resume. The document might be scanned or empty.")
 
                 # 6. Save text and update status to COMPLETED
-                resume.raw_text = raw_text
+                resume.raw_text = raw_text[:50000]  # Truncate to prevent enormous strings
                 resume.parsing_engine_version = "v1-python"
                 resume.status = ResumeStatus.COMPLETED
                 resume.error_message = None
-                
+
             except Exception as e:
                 # 7. Update status to FAILED and record error message
                 resume.status = ResumeStatus.FAILED
                 resume.error_message = str(e)
-            
-            await session.commit()
 
+            await session.commit()
 
     async def get_resume(self, session: AsyncSession, resume_id: uuid.UUID, user_id: uuid.UUID) -> Resume:
         """Fetches a specific resume."""
@@ -156,24 +139,22 @@ class ResumeService:
             raise HTTPException(status_code=404, detail="Resume not found")
         return resume
 
-
     async def list_resumes(
         self, session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
     ) -> Sequence[Resume]:
         """Fetches all resumes for a user."""
         return await resume_repo.get_all_for_user(session, user_id, skip, limit)
 
-
     async def delete_resume(self, session: AsyncSession, resume_id: uuid.UUID, user_id: uuid.UUID) -> None:
         """Deletes a resume from database and storage."""
         # Need to fetch it first to get the storage_path and ensure ownership
         resume = await self.get_resume(session, resume_id, user_id)
-        
+
         # Delete from DB first
         success = await resume_repo.delete(session, resume_id, user_id)
         if not success:
             raise HTTPException(status_code=500, detail="Failed to delete resume record")
-            
+
         # Delete from physical storage
         # Even if this fails, the DB record is gone, making it an orphaned file,
         # which is preferable to an orphaned DB record.

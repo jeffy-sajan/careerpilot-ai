@@ -13,16 +13,23 @@ from app.models.user import User
 
 
 async def _register_and_login(client: AsyncClient, email: str) -> str:
-    await client.post("/api/v1/auth/register", json={
-        "name": "Opt Test User",
-        "email": email,
-        "password": "testPassword123",
-    })
-    login_resp = await client.post("/api/v1/auth/login", json={
-        "email": email,
-        "password": "testPassword123",
-    })
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Opt Test User",
+            "email": email,
+            "password": "testPassword123",
+        },
+    )
+    login_resp = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": email,
+            "password": "testPassword123",
+        },
+    )
     return login_resp.json()["access_token"]
+
 
 @pytest.fixture
 async def test_user_and_token(client: AsyncClient, db_session: AsyncSession):
@@ -31,6 +38,7 @@ async def test_user_and_token(client: AsyncClient, db_session: AsyncSession):
     result = await db_session.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     return user, token
+
 
 @pytest.fixture
 async def sample_resume(db_session: AsyncSession, test_user_and_token) -> Resume:
@@ -50,6 +58,7 @@ async def sample_resume(db_session: AsyncSession, test_user_and_token) -> Resume
     await db_session.refresh(resume)
     return resume
 
+
 @pytest.mark.asyncio
 async def test_generate_resume_optimizations(
     client: AsyncClient,
@@ -58,7 +67,7 @@ async def test_generate_resume_optimizations(
 ):
     _, token = test_user_and_token
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     with patch("app.api.v1.optimizations.optimization_generator_service.generate_suggestions") as mock_gen:
         mock_gen.return_value = [
             {
@@ -66,15 +75,12 @@ async def test_generate_resume_optimizations(
                 "original_text": "I am a backend engineer",
                 "suggested_text": "I am a senior backend engineer",
                 "reasoning": "Better adjective",
-                "optimization_type": "SUMMARY_IMPROVEMENT"
+                "optimization_type": "SUMMARY_IMPROVEMENT",
             }
         ]
-        
-        response = await client.post(
-            f"/api/v1/resumes/{sample_resume.id}/optimize",
-            headers=headers
-        )
-        
+
+        response = await client.post(f"/api/v1/resumes/{sample_resume.id}/optimize", headers=headers)
+
         print("Response:", response.status_code, response.text)
         assert response.status_code == 201
         data = response.json()
@@ -82,6 +88,7 @@ async def test_generate_resume_optimizations(
         assert len(data["suggestions"]) == 1
         assert data["suggestions"][0]["section"] == "Summary"
         assert data["suggestions"][0]["status"] == "PENDING"
+
 
 @pytest.mark.asyncio
 async def test_update_optimization_status_idor(
@@ -91,12 +98,12 @@ async def test_update_optimization_status_idor(
 ):
     user1, token1 = test_user_and_token
     headers1 = {"Authorization": f"Bearer {token1}"}
-    
+
     email2 = f"other_{uuid.uuid4()}@example.com"
     await _register_and_login(client, email2)
     result = await db_session.execute(select(User).where(User.email == email2))
     user2 = result.scalars().first()
-    
+
     resume2 = Resume(
         user_id=user2.id,
         file_name="r2.pdf",
@@ -110,15 +117,11 @@ async def test_update_optimization_status_idor(
     db_session.add(resume2)
     await db_session.commit()
     await db_session.refresh(resume2)
-    
-    run = OptimizationRun(
-        resume_id=resume2.id,
-        model_name="test",
-        prompt_version="v1"
-    )
+
+    run = OptimizationRun(resume_id=resume2.id, model_name="test", prompt_version="v1")
     db_session.add(run)
     await db_session.flush()
-    
+
     opt = ResumeOptimization(
         run_id=run.id,
         optimization_type="KEYWORD",
@@ -126,16 +129,14 @@ async def test_update_optimization_status_idor(
         original_text="A",
         suggested_text="B",
         reasoning="C",
-        status=OptimizationStatus.PENDING
+        status=OptimizationStatus.PENDING,
     )
     db_session.add(opt)
     await db_session.commit()
     await db_session.refresh(opt)
-    
+
     response = await client.patch(
-        f"/api/v1/optimizations/{opt.id}/status",
-        headers=headers1,
-        json={"status": "ACCEPTED"}
+        f"/api/v1/optimizations/{opt.id}/status", headers=headers1, json={"status": "ACCEPTED"}
     )
-    
+
     assert response.status_code == 404
