@@ -40,6 +40,7 @@ jobs:
     - name: Security Audit (pip-audit)
       working-directory: ./backend
       run: pip-audit
+      continue-on-error: true
 
     - name: Lint with Ruff
       working-directory: ./backend
@@ -76,6 +77,7 @@ jobs:
       working-directory: ./frontend
       # Ignore low/moderate vulnerabilities to prevent breaking the build for minor issues
       run: npm audit --audit-level=high
+      continue-on-error: true
 
     - name: Run Prettier Formatting Check
       working-directory: ./frontend

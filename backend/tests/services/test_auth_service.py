@@ -43,23 +43,23 @@ async def test_authenticate_wrong_email(db_session):
 
 @pytest.mark.asyncio
 async def test_create_and_refresh_tokens(db_session, sample_user):
-    tokens = await auth_service.create_tokens(db_session, sample_user.id)
-    assert tokens.access_token is not None
-    assert tokens.refresh_token is not None
-    assert tokens.token_type == "bearer"
+    token_response, refresh_token_str = await auth_service.create_tokens(db_session, sample_user.id)
+    assert token_response.access_token is not None
+    assert refresh_token_str is not None
+    assert token_response.token_type == "bearer"
 
     # Check that refresh token is saved in DB
     from app.services.auth_service import _hash_token
 
-    rt_hash = _hash_token(tokens.refresh_token)
+    rt_hash = _hash_token(refresh_token_str)
     db_token = await refresh_token_repo.get_by_hash(db_session, rt_hash)
     assert db_token is not None
 
     # Now refresh the token
-    new_tokens = await auth_service.refresh_tokens(db_session, tokens.refresh_token)
-    assert new_tokens.access_token is not None
-    assert new_tokens.refresh_token is not None
-    assert new_tokens.refresh_token != tokens.refresh_token
+    new_token_response, new_refresh_token_str = await auth_service.refresh_tokens(db_session, refresh_token_str)
+    assert new_token_response.access_token is not None
+    assert new_refresh_token_str is not None
+    assert new_refresh_token_str != refresh_token_str
 
     # Old token should be revoked
     revoked_token = await refresh_token_repo.get_by_hash(db_session, rt_hash)
@@ -104,18 +104,14 @@ async def test_request_password_reset_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_request_and_reset_password(db_session, sample_user, capsys):
+async def test_request_and_reset_password(db_session, sample_user):
+    from unittest.mock import AsyncMock, patch
+
     # Request reset
-    await auth_service.request_password_reset(db_session, sample_user.email)
-
-    # Read the token from stdout
-    captured = capsys.readouterr()
-    stdout = captured.out
-
-    # Extract token
-    # "http://localhost:5173/reset-password?token=..."
-    token_line = [line for line in stdout.split("\n") if "?token=" in line][0]
-    token = token_line.split("?token=")[1]
+    with patch("app.services.auth_service.send_reset_password_email", new_callable=AsyncMock) as mock_send:
+        await auth_service.request_password_reset(db_session, sample_user.email)
+        mock_send.assert_called_once()
+        token = mock_send.call_args.kwargs["token"]
 
     # Verify the token works to reset password
     await auth_service.reset_password(db_session, token, "newsecret1Password")

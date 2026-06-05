@@ -48,7 +48,7 @@ async def test_callback_success(client: AsyncClient):
         assert exchange_resp.status_code == 200
         tokens = exchange_resp.json()
         assert "access_token" in tokens
-        assert "refresh_token" in tokens
+        assert "careerpilot_rt" in exchange_resp.cookies
 
 
 @pytest.mark.asyncio

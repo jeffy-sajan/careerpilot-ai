@@ -34,7 +34,7 @@ async def test_login_and_me(client: AsyncClient):
     assert response.status_code == 200
     tokens = response.json()
     assert "access_token" in tokens
-    assert "refresh_token" in tokens
+    assert "careerpilot_rt" in response.cookies
 
     # Get Me
     me_resp = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {tokens['access_token']}"})
@@ -57,12 +57,13 @@ async def test_refresh(client: AsyncClient):
     login_resp = await client.post(
         "/api/v1/auth/login", json={"email": "api.refresh@example.com", "password": "login1Password"}
     )
-    refresh_token = login_resp.json()["refresh_token"]
+    assert "careerpilot_rt" in login_resp.cookies
 
     # Refresh
-    ref_resp = await client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
+    ref_resp = await client.post("/api/v1/auth/refresh")
     assert ref_resp.status_code == 200
     assert "access_token" in ref_resp.json()
+    assert "careerpilot_rt" in ref_resp.cookies
 
 
 @pytest.mark.asyncio
@@ -82,15 +83,17 @@ async def test_forgot_password(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_reset_password(client: AsyncClient, capsys):
+async def test_reset_password(client: AsyncClient):
+    from unittest.mock import AsyncMock, patch
+
     payload = {"name": "Reset User", "email": "api.reset@example.com", "password": "login1Password"}
     await client.post("/api/v1/auth/register", json=payload)
 
-    await client.post("/api/v1/auth/forgot-password", json={"email": "api.reset@example.com"})
-
-    captured = capsys.readouterr()
-    token_line = [line for line in captured.out.split("\n") if "?token=" in line][0]
-    token = token_line.split("?token=")[1]
+    with patch("app.services.auth_service.send_reset_password_email", new_callable=AsyncMock) as mock_send:
+        resp = await client.post("/api/v1/auth/forgot-password", json={"email": "api.reset@example.com"})
+        assert resp.status_code == 202
+        mock_send.assert_called_once()
+        token = mock_send.call_args.kwargs["token"]
 
     resp = await client.post("/api/v1/auth/reset-password", json={"token": token, "new_password": "newpassword123"})
     assert resp.status_code == 200
