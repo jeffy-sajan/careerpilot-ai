@@ -2,7 +2,7 @@
 # Stage 1 — Builder
 # Install dependencies with build tools available.
 # ────────────────────────────────────────────
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim-bookworm AS builder
 
 # Prevent Python from writing .pyc files and enable unbuffered stdout
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -27,7 +27,7 @@ RUN pip install --upgrade pip && \
 # Stage 2 — Production Image
 # Lean image — only runtime dependencies.
 # ────────────────────────────────────────────
-FROM python:3.12-slim AS production
+FROM python:3.12-slim-bookworm AS production
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
