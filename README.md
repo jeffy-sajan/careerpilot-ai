@@ -1,4 +1,4 @@
-# CareerPilot AI 🚀
+# CareerPilot AI
 
 CareerPilot AI is an advanced, AI-powered career assistant built to streamline the job application process. It offers intelligent resume parsing, matching against job descriptions, ATS optimization insights, and job application tracking.
 
@@ -6,7 +6,7 @@ Whether you're a job seeker looking to optimize your resume for applicant tracki
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 *   **Resume Analyzer:** Upload your PDF resumes, automatically extract key skills, and receive an AI-generated analysis.
 *   **Job Description (JD) Matcher:** Compare your resume directly against specific job descriptions to instantly see match percentages, missing keywords, and profile gaps.
@@ -16,7 +16,7 @@ Whether you're a job seeker looking to optimize your resume for applicant tracki
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 *(Replace these placeholders with actual screenshots of your deployed app)*
 
@@ -30,7 +30,7 @@ Whether you're a job seeker looking to optimize your resume for applicant tracki
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 **Frontend:**
 *   React 18 (Vite)
@@ -51,7 +51,7 @@ Whether you're a job seeker looking to optimize your resume for applicant tracki
 
 ---
 
-## 🏗 Architecture Diagram
+## Architecture Diagram
 
 ```mermaid
 graph TD
@@ -74,7 +74,7 @@ graph TD
 
 ---
 
-## 🗄️ Database Entity-Relationship (ER) Diagram
+## Database Entity-Relationship (ER) Diagram
 
 ```mermaid
 erDiagram
@@ -124,12 +124,12 @@ erDiagram
 
 ---
 
-## 🚀 Local Setup Guide
+## Local Setup Guide
 
 Follow these steps to run CareerPilot AI on your local machine using Docker.
 
 ### Prerequisites
-*   [Docker](https://docs.docker.com/get-docker/) and Docker Compose installed.
+*   [Docker](https://docs.google.com/get-docker/) and Docker Compose installed.
 *   [Git](https://git-scm.com/) installed.
 *   A Google Gemini API key.
 
@@ -160,7 +160,7 @@ Follow these steps to run CareerPilot AI on your local machine using Docker.
 
 ---
 
-## 📦 Deployment & Database Backup
+## Deployment & Database Backup
 
 ### Deployment Link
 *(Add your live URL here once deployed)*
@@ -183,6 +183,6 @@ docker cp careerpilot_postgres:/tmp/db_backup_$(date +%Y%m%d).dump /path/to/host
 
 ---
 
-## 📜 License
+## License
 
 [MIT License](LICENSE)
