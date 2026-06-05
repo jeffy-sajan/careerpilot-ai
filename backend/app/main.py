@@ -81,6 +81,13 @@ def create_app() -> FastAPI:
     # API Routers
     app.include_router(api_router, prefix="/api/v1")
 
+    @app.get("/")
+    async def root():
+        return {
+            "message": "CareerPilot API is running.",
+            "documentation": "/docs" if settings.ENVIRONMENT == "development" else "Disabled in production"
+        }
+
     return app
 
 
