@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.rate_limit import limiter
-from app.core.storage import LocalStorageProvider
 from app.database.session import get_async_session
 from app.models.user import User
 from app.schemas.resume import (
@@ -29,8 +28,21 @@ router = APIRouter()
 
 # Dependency to inject the service layer
 def get_resume_service() -> ResumeService:
-    # In the future, you can swap this with SupabaseStorageProvider based on a settings flag
-    storage = LocalStorageProvider(base_dir="uploads")
+    from app.core.config import settings
+    
+    if settings.STORAGE_PROVIDER == "supabase":
+        if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_KEY:
+            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set when STORAGE_PROVIDER is 'supabase'")
+        from app.core.storage import SupabaseStorageProvider
+        storage = SupabaseStorageProvider(
+            url=settings.SUPABASE_URL,
+            key=settings.SUPABASE_SERVICE_KEY,
+            bucket=settings.SUPABASE_BUCKET
+        )
+    else:
+        from app.core.storage import LocalStorageProvider
+        storage = LocalStorageProvider(base_dir="uploads")
+        
     return ResumeService(storage_provider=storage)
 
 

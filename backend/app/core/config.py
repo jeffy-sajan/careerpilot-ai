@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
     EMAILS_FROM_EMAIL: str | None = None
+    
+    # Storage
+    STORAGE_PROVIDER: Literal["local", "supabase"] = "local"
+    SUPABASE_URL: str | None = None
+    SUPABASE_SERVICE_KEY: str | None = None
+    SUPABASE_BUCKET: str = "resumes"
 
 
 settings = Settings()

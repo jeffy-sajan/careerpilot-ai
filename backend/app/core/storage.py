@@ -139,3 +139,54 @@ class LocalStorageProvider(StorageProvider):
                 return f.read()
         except Exception as e:
             raise IOError(f"Failed to read file from local storage: {str(e)}") from e
+
+
+class SupabaseStorageProvider(StorageProvider):
+    """
+    Supabase Storage implementation of StorageProvider.
+    Requires SUPABASE_URL and SUPABASE_SERVICE_KEY settings.
+    """
+
+    def __init__(self, url: str, key: str, bucket: str = "resumes"):
+        from supabase import Client, create_client
+        self.supabase: Client = create_client(url, key)
+        self.bucket = bucket
+
+    async def save_file(self, file_bytes: bytes, user_id: uuid.UUID, original_filename: str) -> Tuple[str, str]:
+        ext = Path(original_filename).suffix.lower()
+        unique_name = f"{uuid.uuid4()}{ext}"
+        storage_path = f"{user_id}/{unique_name}"
+
+        # Upload to Supabase Storage
+        self.supabase.storage.from_(self.bucket).upload(
+            file=file_bytes,
+            path=storage_path,
+            file_options={"content-type": f"application/{'pdf' if ext == '.pdf' else 'msword'}"}
+        )
+
+        # Get public URL
+        file_url = self.supabase.storage.from_(self.bucket).get_public_url(storage_path)
+        return storage_path, file_url
+
+    async def delete_file(self, storage_path: str) -> bool:
+        try:
+            response = self.supabase.storage.from_(self.bucket).remove([storage_path])
+            return len(response) > 0
+        except Exception:
+            return False
+
+    async def file_exists(self, storage_path: str) -> bool:
+        # We can check by attempting to create a signed url or listing files
+        try:
+            folder = str(Path(storage_path).parent)
+            filename = str(Path(storage_path).name)
+            files = self.supabase.storage.from_(self.bucket).list(folder)
+            return any(f["name"] == filename for f in files)
+        except Exception:
+            return False
+
+    async def read_file(self, storage_path: str) -> bytes:
+        try:
+            return self.supabase.storage.from_(self.bucket).download(storage_path)
+        except Exception as e:
+            raise IOError(f"Failed to read file from Supabase storage: {str(e)}") from e
