@@ -4,6 +4,7 @@ Match Service.
 Implements the V1 Job Description Matching logic.
 Calculates a weighted score based on dictionary-matched skills and extracted keywords.
 """
+
 import math
 import re
 import uuid
@@ -67,12 +68,59 @@ SKILLS_DICT = {
 
 # Common words to filter out when extracting general keywords
 STOPWORDS = {
-    "the", "and", "is", "in", "to", "of", "a", "for", "with", "on", "as", "an",
-    "by", "we", "are", "you", "this", "that", "it", "or", "be", "your", "our",
-    "will", "have", "at", "from", "can", "all", "not", "but", "what", "how",
-    "job", "description", "requirements", "responsibilities", "experience",
-    "looking", "seeking", "years", "work", "team", "strong", "good", "excellent",
-    "working", "using", "required", "preferred", "plus", "ability", "skills"
+    "the",
+    "and",
+    "is",
+    "in",
+    "to",
+    "of",
+    "a",
+    "for",
+    "with",
+    "on",
+    "as",
+    "an",
+    "by",
+    "we",
+    "are",
+    "you",
+    "this",
+    "that",
+    "it",
+    "or",
+    "be",
+    "your",
+    "our",
+    "will",
+    "have",
+    "at",
+    "from",
+    "can",
+    "all",
+    "not",
+    "but",
+    "what",
+    "how",
+    "job",
+    "description",
+    "requirements",
+    "responsibilities",
+    "experience",
+    "looking",
+    "seeking",
+    "years",
+    "work",
+    "team",
+    "strong",
+    "good",
+    "excellent",
+    "working",
+    "using",
+    "required",
+    "preferred",
+    "plus",
+    "ability",
+    "skills",
 }
 
 
@@ -84,29 +132,29 @@ class MatchService:
         """Lowercases and removes punctuation except for common tech symbols (+, #, .)."""
         text = text.lower()
         # Keep letters, numbers, spaces, and specific symbols used in tech (C++, C#, Node.js)
-        text = re.sub(r'[^a-z0-9\s\+\#\.\/]', ' ', text)
+        text = re.sub(r"[^a-z0-9\s\+\#\.\/]", " ", text)
         return text
 
     def _extract_skills(self, text: str) -> Set[str]:
         """Scans text for exact matches of our known skill dictionary."""
         found_skills = set()
         clean_text = self._clean_text(text)
-        words = [w.strip('.') for w in clean_text.split()]
-        
+        words = [w.strip(".") for w in clean_text.split()]
+
         # Check single words
         for word in words:
             if word in SKILLS_DICT:
                 found_skills.add(SKILLS_DICT[word])
-                
+
         # Check two-word phrases (e.g. "amazon web services", "machine learning")
         for i in range(len(words) - 1):
-            phrase = f"{words[i]} {words[i+1]}"
+            phrase = f"{words[i]} {words[i + 1]}"
             if phrase in SKILLS_DICT:
                 found_skills.add(SKILLS_DICT[phrase])
-                
+
         # Check three-word phrases
         for i in range(len(words) - 2):
-            phrase = f"{words[i]} {words[i+1]} {words[i+2]}"
+            phrase = f"{words[i]} {words[i + 1]} {words[i + 2]}"
             if phrase in SKILLS_DICT:
                 found_skills.add(SKILLS_DICT[phrase])
 
@@ -115,27 +163,27 @@ class MatchService:
     def _extract_keywords(self, text: str, top_n: int = 15) -> Set[str]:
         """Extracts the most frequent non-stopword tokens as keywords, using stemming."""
         clean_text = self._clean_text(text)
-        
+
         words = []
         for w in clean_text.split():
-            w = w.strip('.')
+            w = w.strip(".")
             if len(w) > 2 and w not in STOPWORDS and w not in SKILLS_DICT:
                 # Stem the word (e.g., managing -> manag)
                 stemmed = self.stemmer.stem(w)
                 words.append(stemmed)
-        
+
         counter = Counter(words)
         return {word for word, count in counter.most_common(top_n)}
 
     def calculate_match(self, resume_text: str, jd_text: str) -> Tuple[float, list, list, list, list]:
         """
         Calculates the match score and extracts matched/missing attributes.
-        
+
         Scoring Formula (0-100):
         - Skills account for 65% of the total score.
         - Keywords account for 35% of the total score.
         - Score = ((Matched_Skills / Total_JD_Skills) * 65) + ((Matched_Keywords / Total_JD_Keywords) * 35)
-        
+
         If the JD has no extractable skills, keywords take 100% of the weight.
         If neither can be extracted, defaults to a baseline text-overlap score or 0.
         """
@@ -146,12 +194,12 @@ class MatchService:
         # 2. Extract from Resume (The Candidate)
         res_skills = self._extract_skills(resume_text)
         # Extract more from resume to increase chance of finding the JD keywords
-        res_keywords = self._extract_keywords(resume_text, top_n=50) 
+        res_keywords = self._extract_keywords(resume_text, top_n=50)
 
         # 3. Compute Set Intersections and Differences
         matched_skills = jd_skills.intersection(res_skills)
         missing_skills = jd_skills.difference(res_skills)
-        
+
         matched_keywords = jd_keywords.intersection(res_keywords)
         missing_keywords = jd_keywords.difference(res_keywords)
 
@@ -161,14 +209,14 @@ class MatchService:
 
         if len(jd_skills) > 0:
             skill_score = (len(matched_skills) / len(jd_skills)) * 65.0
-        
+
         if len(jd_keywords) > 0:
             keyword_score = (len(matched_keywords) / len(jd_keywords)) * 35.0
 
         # Adjust weights if the JD was completely lacking skills (e.g. poor job posting)
         if len(jd_skills) == 0 and len(jd_keywords) > 0:
             keyword_score = (len(matched_keywords) / len(jd_keywords)) * 100.0
-        
+
         total_score = math.floor(skill_score + keyword_score)
 
         # 5. Generate Actionable Suggestions
@@ -181,12 +229,12 @@ class MatchService:
                 f"{', '.join(top_missing)}. "
                 "If you have experience with these, add them to your skills section and bullet points."
             )
-        
+
         if missing_keywords:
             suggestions.append(
                 "Consider incorporating more industry terminology from the job description to pass ATS keyword filters."
             )
-            
+
         if total_score > 80:
             suggestions.append("Great match! Your resume aligns very well with this position.")
 
@@ -207,11 +255,10 @@ class MatchService:
         resume = await resume_repo.get_by_id(session, resume_id, user_id)
         if not resume:
             raise HTTPException(status_code=404, detail="Resume not found")
-            
+
         if not resume.raw_text:
             raise HTTPException(
-                status_code=400, 
-                detail="Resume text has not been parsed yet. Please wait for processing to complete."
+                status_code=400, detail="Resume text has not been parsed yet. Please wait for processing to complete."
             )
 
         jd = await job_description_repo.get_by_id(session, job_description_id, user_id)
@@ -221,14 +268,13 @@ class MatchService:
         # Edge Case Validation: Check if there's enough text
         if len(resume.raw_text.split()) < 30:
             raise HTTPException(status_code=400, detail="Insufficient text in resume to perform a reliable match.")
-            
+
         if len(jd.description.split()) < 30:
             raise HTTPException(status_code=400, detail="Job description is too short to perform a reliable match.")
 
         # Compute Match
         score, matched_skills, missing_skills, missing_keywords, suggestions = self.calculate_match(
-            resume_text=resume.raw_text,
-            jd_text=jd.description
+            resume_text=resume.raw_text, jd_text=jd.description
         )
 
         # Save to Database
@@ -242,7 +288,7 @@ class MatchService:
             missing_keywords=missing_keywords,
             suggestions=suggestions,
         )
-        
+
         return match
 
     async def get_match(
@@ -261,7 +307,8 @@ class MatchService:
         match = await resume_match_repo.get_match(session, resume_id, job_description_id)
         if not match:
             raise HTTPException(status_code=404, detail="Match analysis not found for these documents.")
-            
+
         return match
+
 
 match_service = MatchService()

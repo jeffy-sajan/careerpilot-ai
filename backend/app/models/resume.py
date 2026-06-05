@@ -1,6 +1,7 @@
 """
 Resume Model.
 """
+
 import uuid
 
 from sqlalchemy import Enum, ForeignKey, Index, Integer, String, Text
@@ -32,9 +33,7 @@ class Resume(Base, TimestampMixin):
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
     file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[ResumeStatus] = mapped_column(
-        Enum(ResumeStatus, name="resumestatus"),
-        nullable=False,
-        default=ResumeStatus.UPLOADED
+        Enum(ResumeStatus, name="resumestatus"), nullable=False, default=ResumeStatus.UPLOADED
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     parsing_engine_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -50,4 +49,3 @@ class Resume(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<Resume(id={self.id}, original_file_name='{self.original_file_name}', status='{self.status}')>"
-

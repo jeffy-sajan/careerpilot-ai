@@ -11,6 +11,7 @@ from pydantic import BaseModel, EmailStr, Field
 # Request Schemas  (data the CLIENT sends TO the API)
 # ─────────────────────────────────────────────────────────────
 
+
 class UserLoginRequest(BaseModel):
     """
     Payload required to authenticate and receive a token pair.
@@ -62,6 +63,7 @@ class ForgotPasswordRequest(BaseModel):
     """
     Payload to request a password reset email/link.
     """
+
     email: EmailStr = Field(description="The registered email address.")
 
 
@@ -69,6 +71,7 @@ class ResetPasswordRequest(BaseModel):
     """
     Payload to finalize a password reset with the new password.
     """
+
     token: str = Field(description="The short-lived reset token.")
     new_password: str = Field(
         min_length=8,
@@ -77,10 +80,10 @@ class ResetPasswordRequest(BaseModel):
     )
 
 
-
 # ─────────────────────────────────────────────────────────────
 # Response Schemas  (data the API sends BACK to the client)
 # ─────────────────────────────────────────────────────────────
+
 
 class TokenResponse(BaseModel):
     """
@@ -88,14 +91,13 @@ class TokenResponse(BaseModel):
     Used by: POST /login (200), POST /refresh (200), POST /google/exchange (200)
     """
 
-    access_token: str  = Field(description="Short-lived JWT for API authorization.")
-    refresh_token: str = Field(description="Long-lived opaque token for silent re-authentication.")
-    token_type: str    = Field(default="bearer", description="Token scheme, always 'bearer'.")
+    access_token: str = Field(description="Short-lived JWT for API authorization.")
+    token_type: str = Field(default="bearer", description="Token scheme, always 'bearer'.")
 
 
 # ─────────────────────────────────────────────────────────────
 # Internal Aliases  (backward-compat with router / service)
 # ─────────────────────────────────────────────────────────────
-LoginRequest   = UserLoginRequest
+LoginRequest = UserLoginRequest
 RefreshRequest = RefreshTokenRequest
-Token          = TokenResponse
+Token = TokenResponse

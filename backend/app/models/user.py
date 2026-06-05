@@ -1,6 +1,7 @@
 """
 User Model.
 """
+
 import uuid
 from typing import Optional
 
@@ -33,9 +34,7 @@ class User(Base, TimestampMixin):
     auth_provider: Mapped[str] = mapped_column(String(20), default="email", nullable=False)
 
     # Relationships
-    resumes: Mapped[list["Resume"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
-    )
+    resumes: Mapped[list["Resume"]] = relationship(back_populates="user", cascade="all, delete-orphan", lazy="selectin")
     job_applications: Mapped[list["JobApplication"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="selectin"
     )

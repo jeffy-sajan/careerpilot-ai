@@ -1,6 +1,7 @@
 """
 User Repository.
 """
+
 import uuid
 from typing import Optional
 
@@ -82,10 +83,10 @@ async def get_or_create_google_user(
     new_user = User(
         email=email,
         name=name,
-        password_hash=None,          # Google users have no password
+        password_hash=None,  # Google users have no password
         google_id=google_id,
         avatar_url=avatar_url,
-        email_verified=True,          # Google guarantees email is verified
+        email_verified=True,  # Google guarantees email is verified
         auth_provider="google",
     )
     session.add(new_user)

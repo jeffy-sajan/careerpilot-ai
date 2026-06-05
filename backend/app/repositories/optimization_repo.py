@@ -1,6 +1,7 @@
 """
 Optimization Repository.
 """
+
 import uuid
 from typing import Optional, Sequence
 
@@ -44,14 +45,12 @@ async def create_many(
             status=OptimizationStatus.PENDING,
         )
         session.add(opt)
-    
+
     await session.commit()
-    
+
     # Reload with selectinload to ensure suggestions relationship is populated
     result = await session.execute(
-        select(OptimizationRun)
-        .options(selectinload(OptimizationRun.suggestions))
-        .where(OptimizationRun.id == run.id)
+        select(OptimizationRun).options(selectinload(OptimizationRun.suggestions)).where(OptimizationRun.id == run.id)
     )
     return result.scalars().first()
 
@@ -86,13 +85,10 @@ async def update_status(
         select(ResumeOptimization)
         .join(OptimizationRun, OptimizationRun.id == ResumeOptimization.run_id)
         .join(Resume, Resume.id == OptimizationRun.resume_id)
-        .where(
-            ResumeOptimization.id == optimization_id,
-            Resume.user_id == user_id
-        )
+        .where(ResumeOptimization.id == optimization_id, Resume.user_id == user_id)
     )
     opt = result.scalars().first()
-    
+
     if opt:
         opt.status = status
         await session.commit()

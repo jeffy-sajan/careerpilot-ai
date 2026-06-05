@@ -1,6 +1,7 @@
 """
 Resume Match Model.
 """
+
 import uuid
 
 from sqlalchemy import Float, ForeignKey

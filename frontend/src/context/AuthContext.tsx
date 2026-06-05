@@ -10,11 +10,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { User, TokenResponse } from "../types/auth";
 import { authApi } from "../lib/api/auth";
 import { getToken, setToken, clearToken } from "../lib/tokenStore";
-import {
-  getRefreshToken,
-  setRefreshToken,
-  clearRefreshToken,
-} from "../lib/refreshTokenStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Context Shape
@@ -84,12 +79,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (delay <= 0) return;
 
     refreshTimerRef.current = setTimeout(async () => {
-      const rt = getRefreshToken();
-      if (!rt) return;
       try {
-        const tokens = await authApi.refresh({ refresh_token: rt });
+        const tokens = await authApi.refresh();
         setToken(tokens.access_token);
-        setRefreshToken(tokens.refresh_token);
         scheduleProactiveRefresh(tokens.access_token); // schedule the next refresh
       } catch {
         // Proactive refresh failed — reactive interceptor will catch the next 401
@@ -100,7 +92,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // ── Actions ───────────────────────────────────────────────────────────────
   const login = (tokens: TokenResponse) => {
     setToken(tokens.access_token);
-    setRefreshToken(tokens.refresh_token);
     scheduleProactiveRefresh(tokens.access_token);
     // Refetch the user profile with the new token
     queryClient.invalidateQueries({ queryKey: ["authUser"] });
@@ -114,7 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
       clearToken();
-      clearRefreshToken();
       setUser(null);
       queryClient.setQueryData(["authUser"], null);
       queryClient.clear();

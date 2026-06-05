@@ -4,7 +4,6 @@ import {
   RegisterRequest,
   TokenResponse,
   User,
-  RefreshRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
 } from "../../types/auth";
@@ -29,8 +28,8 @@ export const authApi = {
     return response.data;
   },
 
-  refresh: async (data: RefreshRequest): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>("/auth/refresh", data);
+  refresh: async (): Promise<TokenResponse> => {
+    const response = await apiClient.post<TokenResponse>("/auth/refresh");
     return response.data;
   },
 

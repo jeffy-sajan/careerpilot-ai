@@ -5,6 +5,7 @@ Tests the full HTTP stack: routing → service → repository → database.
 Each test registers a fresh user and uses that user's JWT for all requests,
 so ownership enforcement is exercised on every authenticated call.
 """
+
 import pytest
 from httpx import AsyncClient
 
@@ -12,17 +13,24 @@ from httpx import AsyncClient
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _register_and_login(client: AsyncClient, email: str) -> str:
     """Registers a user and returns a valid Bearer token."""
-    await client.post("/api/v1/auth/register", json={
-        "name": "JD Test User",
-        "email": email,
-        "password": "jd1TestPassword",
-    })
-    login_resp = await client.post("/api/v1/auth/login", json={
-        "email": email,
-        "password": "jd1TestPassword",
-    })
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "JD Test User",
+            "email": email,
+            "password": "jd1TestPassword",
+        },
+    )
+    login_resp = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": email,
+            "password": "jd1TestPassword",
+        },
+    )
     return login_resp.json()["access_token"]
 
 
@@ -40,6 +48,7 @@ JD_PAYLOAD = {
 # ---------------------------------------------------------------------------
 # POST /api/v1/jobs — Create
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_job_description(client: AsyncClient):
@@ -95,6 +104,7 @@ async def test_create_job_description_missing_title(client: AsyncClient):
 # GET /api/v1/jobs — List
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_list_job_descriptions_empty(client: AsyncClient):
     """A new user with no JDs should receive an empty list."""
@@ -136,14 +146,10 @@ async def test_list_job_descriptions_isolation(client: AsyncClient):
     token_b = await _register_and_login(client, "jd.userb@example.com")
 
     # User A creates a JD
-    await client.post(
-        "/api/v1/jobs/", json=JD_PAYLOAD, headers={"Authorization": f"Bearer {token_a}"}
-    )
+    await client.post("/api/v1/jobs/", json=JD_PAYLOAD, headers={"Authorization": f"Bearer {token_a}"})
 
     # User B's list must be empty
-    response = await client.get(
-        "/api/v1/jobs/", headers={"Authorization": f"Bearer {token_b}"}
-    )
+    response = await client.get("/api/v1/jobs/", headers={"Authorization": f"Bearer {token_b}"})
     assert response.status_code == 200
     assert response.json() == []
 
@@ -151,6 +157,7 @@ async def test_list_job_descriptions_isolation(client: AsyncClient):
 # ---------------------------------------------------------------------------
 # GET /api/v1/jobs/{id} — Detail
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_job_description(client: AsyncClient):
@@ -173,6 +180,7 @@ async def test_get_job_description(client: AsyncClient):
 async def test_get_job_description_not_found(client: AsyncClient):
     """GET with a random UUID returns 404."""
     import uuid
+
     token = await _register_and_login(client, "jd.get404@example.com")
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -187,21 +195,18 @@ async def test_get_job_description_other_user(client: AsyncClient):
     token_b = await _register_and_login(client, "jd.own.b@example.com")
 
     # User A creates a JD
-    create_resp = await client.post(
-        "/api/v1/jobs/", json=JD_PAYLOAD, headers={"Authorization": f"Bearer {token_a}"}
-    )
+    create_resp = await client.post("/api/v1/jobs/", json=JD_PAYLOAD, headers={"Authorization": f"Bearer {token_a}"})
     jd_id = create_resp.json()["id"]
 
     # User B tries to access it
-    response = await client.get(
-        f"/api/v1/jobs/{jd_id}", headers={"Authorization": f"Bearer {token_b}"}
-    )
+    response = await client.get(f"/api/v1/jobs/{jd_id}", headers={"Authorization": f"Bearer {token_b}"})
     assert response.status_code == 404
 
 
 # ---------------------------------------------------------------------------
 # DELETE /api/v1/jobs/{id} — Delete
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_delete_job_description(client: AsyncClient):
@@ -224,6 +229,7 @@ async def test_delete_job_description(client: AsyncClient):
 async def test_delete_job_description_not_found(client: AsyncClient):
     """DELETE on a non-existent ID returns 404."""
     import uuid
+
     token = await _register_and_login(client, "jd.del404@example.com")
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -237,18 +243,12 @@ async def test_delete_job_description_other_user(client: AsyncClient):
     token_a = await _register_and_login(client, "jd.dela@example.com")
     token_b = await _register_and_login(client, "jd.delb@example.com")
 
-    create_resp = await client.post(
-        "/api/v1/jobs/", json=JD_PAYLOAD, headers={"Authorization": f"Bearer {token_a}"}
-    )
+    create_resp = await client.post("/api/v1/jobs/", json=JD_PAYLOAD, headers={"Authorization": f"Bearer {token_a}"})
     jd_id = create_resp.json()["id"]
 
-    response = await client.delete(
-        f"/api/v1/jobs/{jd_id}", headers={"Authorization": f"Bearer {token_b}"}
-    )
+    response = await client.delete(f"/api/v1/jobs/{jd_id}", headers={"Authorization": f"Bearer {token_b}"})
     assert response.status_code == 404
 
     # Confirm User A's JD still exists
-    get_resp = await client.get(
-        f"/api/v1/jobs/{jd_id}", headers={"Authorization": f"Bearer {token_a}"}
-    )
+    get_resp = await client.get(f"/api/v1/jobs/{jd_id}", headers={"Authorization": f"Bearer {token_a}"})
     assert get_resp.status_code == 200

@@ -1,10 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getToken, setToken, clearToken } from "./tokenStore";
-import {
-  getRefreshToken,
-  setRefreshToken,
-  clearRefreshToken,
-} from "./refreshTokenStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
@@ -84,37 +79,20 @@ apiClient.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) {
-      // No refresh token available: force logout
-      clearToken();
-      clearRefreshToken();
-      isRefreshing = false;
-      processQueue(new Error("No refresh token"), null);
-      if (
-        window.location.pathname !== "/login" &&
-        window.location.pathname !== "/register" &&
-        window.location.pathname !== "/auth/google/callback" &&
-        window.location.pathname !== "/forgot-password" &&
-        window.location.pathname !== "/reset-password"
-      ) {
-        window.location.href = "/login";
-      }
-      return Promise.reject(error);
-    }
-
     try {
       // Make the refresh call using a plain axios call (not apiClient) to
       // avoid triggering this interceptor recursively.
       const { data } = await axios.post(
         `${API_URL}/auth/refresh`,
-        { refresh_token: refreshToken },
-        { headers: { "Content-Type": "application/json" } },
+        {},
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        },
       );
 
-      // Store the new token pair
+      // Store the new access token
       setToken(data.access_token);
-      setRefreshToken(data.refresh_token);
 
       // Attach new token to the original failed request and retry it
       if (originalRequest.headers) {
@@ -127,7 +105,6 @@ apiClient.interceptors.response.use(
       // Refresh failed — clear everything and force logout
       processQueue(refreshError, null);
       clearToken();
-      clearRefreshToken();
       if (
         window.location.pathname !== "/login" &&
         window.location.pathname !== "/register" &&

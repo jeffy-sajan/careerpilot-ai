@@ -8,11 +8,13 @@ from pydantic import BaseModel, ConfigDict, Field
 MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
 ALLOWED_MIME_TYPES = {
     "application/pdf": "pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx"
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
 }
+
 
 class ResumeBase(BaseModel):
     """Base fields shared across all Resume responses."""
+
     id: UUID
     user_id: UUID
     original_file_name: str
@@ -27,14 +29,15 @@ class ResumeBase(BaseModel):
 
 class ResumeUploadResponse(ResumeBase):
     """Returned immediately after a user uploads a file."""
+
     message: str = Field(
-        default="Resume uploaded successfully and is queued for parsing.",
-        description="Status message for the frontend"
+        default="Resume uploaded successfully and is queued for parsing.", description="Status message for the frontend"
     )
 
 
 class ResumeResponse(ResumeBase):
     """Detailed response for a single resume."""
+
     file_url: str
     raw_text: Optional[str] = None
     parsed_data: Optional[dict] = None
@@ -43,7 +46,9 @@ class ResumeResponse(ResumeBase):
 
 class ResumeListResponse(ResumeBase):
     """Lightweight schema used for returning a list of resumes (Dashboard view)."""
+
     file_url: str
+
 
 class ResumeAnalysisResponse(BaseModel):
     id: UUID

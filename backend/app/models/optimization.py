@@ -1,6 +1,7 @@
 """
 Optimization Models.
 """
+
 import uuid
 
 from sqlalchemy import Enum, ForeignKey, Index, String, Text
@@ -14,9 +15,7 @@ from app.models.enums import OptimizationStatus, OptimizationType
 class OptimizationRun(Base, TimestampMixin):
     __tablename__ = "optimization_runs"
 
-    __table_args__ = (
-        Index("ix_optimization_runs_resume_job", "resume_id", "job_description_id"),
-    )
+    __table_args__ = (Index("ix_optimization_runs_resume_job", "resume_id", "job_description_id"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     resume_id: Mapped[uuid.UUID] = mapped_column(
@@ -25,7 +24,7 @@ class OptimizationRun(Base, TimestampMixin):
     job_description_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=True, index=True
     )
-    
+
     # Metadata for the generation
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
     prompt_version: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -46,20 +45,17 @@ class ResumeOptimization(Base, TimestampMixin):
     run_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("optimization_runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    
+
     optimization_type: Mapped[OptimizationType] = mapped_column(
-        Enum(OptimizationType, name="optimizationtype"),
-        nullable=False
+        Enum(OptimizationType, name="optimizationtype"), nullable=False
     )
     section: Mapped[str] = mapped_column(String(100), nullable=False)
     original_text: Mapped[str] = mapped_column(Text, nullable=False)
     suggested_text: Mapped[str] = mapped_column(Text, nullable=False)
     reasoning: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     status: Mapped[OptimizationStatus] = mapped_column(
-        Enum(OptimizationStatus, name="optimizationstatus"),
-        nullable=False,
-        default=OptimizationStatus.PENDING
+        Enum(OptimizationStatus, name="optimizationstatus"), nullable=False, default=OptimizationStatus.PENDING
     )
 
     # Relationships

@@ -10,6 +10,7 @@ Flow:
   → Frontend calls POST /auth/google/exchange { code: UUID }
   → Backend validates, deletes code, returns JWT pair
 """
+
 import uuid
 from datetime import datetime
 

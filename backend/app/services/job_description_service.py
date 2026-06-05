@@ -5,6 +5,7 @@ Business logic layer sitting between the API router and the repository.
 Responsible for ownership validation and raising the correct HTTP errors
 so the router stays thin and declarative.
 """
+
 import uuid
 from typing import Sequence
 

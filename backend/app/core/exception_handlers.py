@@ -28,8 +28,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         """Catch-all for unhandled exceptions."""
         import logging
 
+        import sentry_sdk
+
         logger = logging.getLogger(__name__)
         logger.exception("Unhandled exception: %s", exc)
+        sentry_sdk.capture_exception(exc)
 
         return JSONResponse(
             status_code=500,
