@@ -92,6 +92,7 @@ class TokenResponse(BaseModel):
     """
 
     access_token: str = Field(description="Short-lived JWT for API authorization.")
+    refresh_token: str | None = Field(default=None, description="Long-lived token for session renewal.")
     token_type: str = Field(default="bearer", description="Token scheme, always 'bearer'.")
 
 

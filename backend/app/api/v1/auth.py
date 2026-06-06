@@ -11,6 +11,7 @@ from app.models.user import User
 from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
+    RefreshTokenRequest,
     ResetPasswordRequest,
     Token,
 )
@@ -50,11 +51,16 @@ async def login(
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh(request: Request, response: Response, db: AsyncSession = Depends(get_async_session)):
-    """Use a refresh token from HttpOnly cookie to get a new access token."""
+async def refresh(
+    request: Request,
+    response: Response,
+    body: RefreshTokenRequest | None = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Use a refresh token from JSON body (or HttpOnly cookie) to get a new access token."""
     from app.core.config import settings
 
-    refresh_token = request.cookies.get("careerpilot_rt")
+    refresh_token = (body.refresh_token if body else None) or request.cookies.get("careerpilot_rt")
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

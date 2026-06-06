@@ -1,5 +1,12 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { getToken, setToken, clearToken } from "./tokenStore";
+import {
+  getToken,
+  setToken,
+  clearToken,
+  getRefreshToken,
+  setRefreshToken,
+  clearRefreshToken,
+} from "./tokenStore";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
@@ -84,15 +91,18 @@ apiClient.interceptors.response.use(
       // avoid triggering this interceptor recursively.
       const { data } = await axios.post(
         `${API_URL}/auth/refresh`,
-        {},
+        { refresh_token: getRefreshToken() },
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
         },
       );
 
-      // Store the new access token
+      // Store the new access and refresh tokens
       setToken(data.access_token);
+      if (data.refresh_token) {
+        setRefreshToken(data.refresh_token);
+      }
 
       // Attach new token to the original failed request and retry it
       if (originalRequest.headers) {
@@ -105,6 +115,7 @@ apiClient.interceptors.response.use(
       // Refresh failed — clear everything and force logout
       processQueue(refreshError, null);
       clearToken();
+      clearRefreshToken();
       if (
         window.location.pathname !== "/login" &&
         window.location.pathname !== "/register" &&
