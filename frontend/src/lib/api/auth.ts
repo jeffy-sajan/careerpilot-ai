@@ -1,4 +1,5 @@
 import { apiClient } from "../axios";
+import { getRefreshToken } from "../tokenStore";
 import {
   LoginRequest,
   RegisterRequest,
@@ -29,7 +30,9 @@ export const authApi = {
   },
 
   refresh: async (): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>("/auth/refresh");
+    const response = await apiClient.post<TokenResponse>("/auth/refresh", {
+      refresh_token: getRefreshToken(),
+    });
     return response.data;
   },
 

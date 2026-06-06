@@ -69,7 +69,7 @@ async def create_tokens(session: AsyncSession, user_id: uuid.UUID) -> tuple[Toke
         session=session, user_id=user_id, token_hash=refresh_token_hash, expires_at=expires_at
     )
 
-    token_response = Token(access_token=access_token, token_type="bearer")
+    token_response = Token(access_token=access_token, token_type="bearer", refresh_token=refresh_token)
     return token_response, refresh_token
 
 
