@@ -43,7 +43,7 @@ async def login(
         value=refresh_token_str,
         httponly=True,
         secure=settings.ENVIRONMENT == "production",
-        samesite="lax",
+        samesite="none" if settings.ENVIRONMENT == "production" else "lax",
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
     )
     return token_response
@@ -68,7 +68,7 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
         value=new_refresh_token_str,
         httponly=True,
         secure=settings.ENVIRONMENT == "production",
-        samesite="lax",
+        samesite="none" if settings.ENVIRONMENT == "production" else "lax",
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
     )
     return token_response
@@ -77,7 +77,11 @@ async def refresh(request: Request, response: Response, db: AsyncSession = Depen
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(response: Response):
     """Clear the refresh token cookie."""
-    response.delete_cookie(key="careerpilot_rt", samesite="lax")
+    from app.core.config import settings
+    response.delete_cookie(
+        key="careerpilot_rt",
+        samesite="none" if settings.ENVIRONMENT == "production" else "lax"
+    )
     return {"message": "Logged out successfully"}
 
 
