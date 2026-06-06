@@ -163,7 +163,7 @@ async def google_exchange(
         value=refresh_token_str,
         httponly=True,
         secure=settings.ENVIRONMENT == "production",
-        samesite="lax",
+        samesite="none" if settings.ENVIRONMENT == "production" else "lax",
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
     )
     return token_response

@@ -59,7 +59,7 @@ def create_app() -> FastAPI:
         SessionMiddleware,
         secret_key=settings.SESSION_SECRET_KEY,
         https_only=settings.ENVIRONMENT == "production",
-        same_site="lax",
+        same_site="none" if settings.ENVIRONMENT == "production" else "lax",
     )
 
     # CORS Configuration
