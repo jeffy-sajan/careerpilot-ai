@@ -165,7 +165,7 @@ export default function ResumeAnalyzerPage() {
         }
       />
 
-      <div className="space-y-6 p-6 lg:p-8">
+      <div className="space-y-6 p-4 md:p-6 lg:p-8">
         {/* Status Summary Bar */}
         {resumes.length > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -368,7 +368,7 @@ function ResumeRow({
     <li
       className={`group px-5 py-3.5 transition-colors hover:bg-surface-muted/50 ${isProcessing ? "animate-pulse" : ""}`}
     >
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <div
             className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ${

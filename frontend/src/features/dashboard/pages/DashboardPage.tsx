@@ -137,14 +137,14 @@ export default function DashboardPage() {
         }
       />
 
-      <div className="p-8 lg:p-10 space-y-8 max-w-[1400px]">
+      <div className="p-4 md:p-8 lg:p-10 space-y-8 max-w-[1400px]">
         {/* Editorial intro */}
         <section className="grid grid-cols-12 gap-6 items-end border-b border-ink/15 pb-8">
           <div className="col-span-12 lg:col-span-8">
             <div className="eyebrow mb-3">
               Vol. {yearStr} · Week {week} · The Briefing
             </div>
-            <h2 className="font-display text-5xl lg:text-6xl leading-[0.95] tracking-tight text-foreground">
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[0.95] tracking-tight text-foreground">
               {metrics?.total_offers || "Zero"} offers,
               <br />
               {metrics?.total_interviews || "zero"} interviews,

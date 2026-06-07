@@ -74,7 +74,12 @@ const MOTIVATIONAL_QUOTES = [
   },
 ] as const;
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  isMobile?: boolean;
+  onClose?: () => void;
+}
+
+export function AppSidebar({ isMobile, onClose }: AppSidebarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -108,9 +113,11 @@ export function AppSidebar() {
 
   return (
     <aside
-      className={`hidden lg:flex shrink-0 flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300 ease-in-out border-r border-sidebar-border ${
-        isCollapsed ? "w-20" : "w-72"
-      }`}
+      className={`${
+        isMobile
+          ? "flex w-72"
+          : "hidden lg:flex " + (isCollapsed ? "w-20" : "w-72")
+      } shrink-0 flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300 ease-in-out border-r border-sidebar-border`}
     >
       {/* Brand */}
       <div
@@ -119,10 +126,10 @@ export function AppSidebar() {
       >
         {!isCollapsed && (
           <button
-            onClick={() => setIsCollapsed(true)}
+            onClick={isMobile ? onClose : () => setIsCollapsed(true)}
             className="flex items-center justify-center text-sidebar-foreground/20 hover:text-sidebar-primary transition-colors absolute right-5 top-7"
-            aria-label="Collapse Sidebar"
-            title="Collapse Sidebar"
+            aria-label={isMobile ? "Close Sidebar" : "Collapse Sidebar"}
+            title={isMobile ? "Close Sidebar" : "Collapse Sidebar"}
           >
             <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
@@ -184,9 +191,12 @@ export function AppSidebar() {
               <li key={item.to}>
                 <NavLink
                   to={item.to}
-                  title={isCollapsed ? item.label : undefined}
+                  title={isCollapsed && !isMobile ? item.label : undefined}
+                  onClick={() => {
+                    if (isMobile && onClose) onClose();
+                  }}
                   className={({ isActive }) =>
-                    `sidebar-link group flex items-center transition-colors rounded-md ${isCollapsed ? "justify-center p-3" : "gap-3 px-3 py-2.5 text-sm"} ${
+                    `sidebar-link group flex items-center transition-colors rounded-md ${isCollapsed && !isMobile ? "justify-center p-3" : "gap-3 px-3 py-2.5 text-sm"} ${
                       isActive
                         ? "bg-sidebar-accent text-sidebar-primary"
                         : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-primary"
@@ -207,7 +217,7 @@ export function AppSidebar() {
                         strokeWidth={1.5}
                       />
 
-                      {!isCollapsed && (
+                      {!isCollapsed || isMobile ? (
                         <>
                           <span className="flex-1 font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
                             {item.label}
@@ -216,7 +226,7 @@ export function AppSidebar() {
                             <span className="h-1.5 w-1.5 rounded-full bg-warning shrink-0" />
                           )}
                         </>
-                      )}
+                      ) : null}
                     </>
                   )}
                 </NavLink>

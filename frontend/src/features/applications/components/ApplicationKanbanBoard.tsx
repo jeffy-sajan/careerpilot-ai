@@ -7,6 +7,10 @@ import {
   DragOverlay,
   DragStartEvent,
   pointerWithin,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { Plus, MoreHorizontal } from "lucide-react";
@@ -85,7 +89,7 @@ function KanbanCard({
 
   const inner = (
     <div
-      className={`block w-full rounded-lg border border-border bg-card p-3.5 text-left shadow-card transition-all
+      className={`block w-full rounded-lg border border-border bg-card p-3.5 text-left shadow-card transition-all select-none
         ${
           isOverlay
             ? "rotate-2 scale-105 border-primary/50 shadow-elevated cursor-grabbing"
@@ -93,6 +97,7 @@ function KanbanCard({
         }
         ${isDragging ? "opacity-30" : "opacity-100"}
       `}
+      style={{ WebkitTouchCallout: "none" }}
     >
       {/* Top row: avatar + company + menu */}
       <div className="flex items-center justify-between">
@@ -229,6 +234,21 @@ export function ApplicationKanbanBoard({
     ? applications.find((a) => a.id === activeId)
     : null;
 
+  // Configure sensors for desktop (mouse) and mobile (touch)
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5, // Requires 5px movement before dragging starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // Requires pressing for 250ms before dragging starts on mobile
+        tolerance: 5, // Allows 5px of movement while pressing before canceling
+      },
+    }),
+  );
+
   const handleDragStart = (e: DragStartEvent) => {
     setActiveId(e.active.id as string);
   };
@@ -248,19 +268,24 @@ export function ApplicationKanbanBoard({
 
   return (
     <DndContext
+      sensors={sensors}
       collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+      <div className="flex overflow-x-auto snap-x pb-4 gap-4 md:grid md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 md:overflow-visible md:snap-none md:pb-0">
         {COLUMNS.map((col) => (
-          <KanbanColumn
+          <div
             key={col.id}
-            col={col}
-            applications={applications.filter((a) => a.status === col.id)}
-            onCardClick={onCardClick}
-            onAddClick={onAddNew}
-          />
+            className="w-[85vw] max-w-[320px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink"
+          >
+            <KanbanColumn
+              col={col}
+              applications={applications.filter((a) => a.status === col.id)}
+              onCardClick={onCardClick}
+              onAddClick={onAddNew}
+            />
+          </div>
         ))}
       </div>
 
