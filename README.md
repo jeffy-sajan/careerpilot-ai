@@ -18,15 +18,14 @@ Whether you're a job seeker looking to optimize your resume for applicant tracki
 
 ## Screenshots
 
-*(Replace these placeholders with actual screenshots of your deployed app)*
 
-| Dashboard | Resume Analysis |
-| :---: | :---: |
-| ![Dashboard Placeholder](https://via.placeholder.com/600x400?text=Dashboard+Screenshot) | ![Analysis Placeholder](https://via.placeholder.com/600x400?text=Resume+Analysis+Screenshot) |
 
-| JD Matcher | Application Tracker |
-| :---: | :---: |
-| ![JD Match Placeholder](https://via.placeholder.com/600x400?text=JD+Matcher+Screenshot) | ![Tracker Placeholder](https://via.placeholder.com/600x400?text=Job+Tracker+Screenshot) |
+
+
+https://github.com/user-attachments/assets/f1ac55d5-4799-4d2c-ba9d-9d689abf28fd
+
+
+
 
 ---
 
