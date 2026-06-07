@@ -217,7 +217,7 @@ export default function MatchDashboardPage() {
             : "Resume vs Job Description"
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               onClick={() => navigate(`/jd-matcher/${jobId}`)}
@@ -245,7 +245,7 @@ export default function MatchDashboardPage() {
         }
       />
 
-      <div className="p-6 lg:p-8 max-w-6xl">
+      <div className="p-4 md:p-6 lg:p-8 max-w-6xl">
         {/* Loading */}
         {isLoading && (
           <div className="flex items-center justify-center py-28 text-muted-foreground">
