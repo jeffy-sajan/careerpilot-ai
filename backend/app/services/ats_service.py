@@ -8,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.resume import Resume
 from app.models.resume_analysis import ResumeAnalysis
+from app.services.resume_classifier_service import resume_classifier
+from app.services.resume_section_extractor import resume_section_extractor
+from app.services.section_quality_scorer import SKILL_CATEGORIES
 
 
 class KeywordItem(BaseModel):
@@ -31,132 +34,140 @@ class ATSService:
     def _analyze_text(self, text: str) -> dict:
         """
         Rule-based ATS analysis engine.
-        Scores based on heuristics and structural checks.
+        Combines contact/formatting checks (40 pts) with section-quality
+        evaluation (60 pts) via SectionQualityScorer.
         """
-        score = 100
-        strengths = []
-        weaknesses = []
-        recommendations = []
+        from app.services.section_quality_scorer import section_quality_scorer
+        from app.services.ats_feedback_generator import ats_feedback_generator
 
-        # Clean text of common PDF extraction artifacts (like zero-width spaces)
+        formatting_score = 40  # max 40 pts for contact + formatting
+        formatting_details = {}
+
+        # Clean text of common PDF extraction artifacts
         clean_text = text.replace("\u200b", "").replace("\xa0", " ")
         text_lower = clean_text.lower()
 
-        # 1. Check Email
+        # ── Contact & Formatting Checks (max 40) ───────────────────────────
+
+        # 1. Email (5 pts)
         email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-        if re.search(email_pattern, clean_text):
-            strengths.append("Contact information (email) is present.")
-        else:
-            score -= 10
-            weaknesses.append("Missing email address.")
-            recommendations.append("Add a professional email address for contact.")
+        formatting_details["has_email"] = bool(re.search(email_pattern, clean_text))
+        if not formatting_details["has_email"]:
+            formatting_score -= 5
 
-        # 2. Check Phone
+        # 2. Phone (5 pts)
         phone_pattern = r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}"
-        if re.search(phone_pattern, clean_text):
-            strengths.append("Contact information (phone number) is present.")
-        else:
-            score -= 10
-            weaknesses.append("Missing phone number.")
-            recommendations.append("Add a phone number so recruiters can reach you easily.")
+        formatting_details["has_phone"] = bool(re.search(phone_pattern, clean_text))
+        if not formatting_details["has_phone"]:
+            formatting_score -= 5
 
-        # 3. Check LinkedIn
-        if "linkedin.com" in text_lower:
-            strengths.append("Professional profile (LinkedIn) included.")
-        else:
-            score -= 5
-            weaknesses.append("Missing LinkedIn profile link.")
-            recommendations.append("Include a link to your LinkedIn profile to provide more professional context.")
+        # 3. LinkedIn (5 pts)
+        formatting_details["has_linkedin"] = "linkedin.com" in text_lower
+        if not formatting_details["has_linkedin"]:
+            formatting_score -= 5
 
-        # 4. Skills Section
-        if "skills" in text_lower or "technologies" in text_lower:
-            strengths.append("Dedicated Skills section detected.")
-        else:
-            score -= 15
-            weaknesses.append("Skills section not clearly defined.")
-            recommendations.append("Add a distinct 'Skills' section listing your technical and soft skills.")
-
-        # 5. Education Section
-        if "education" in text_lower or "university" in text_lower or "degree" in text_lower:
-            strengths.append("Education section is clearly defined.")
-        else:
-            score -= 10
-            weaknesses.append("Education details missing or unclear.")
-            recommendations.append("Include your highest degree and institution name.")
-
-        # 6. Experience Section
-        if "experience" in text_lower or "employment" in text_lower or "work history" in text_lower:
-            strengths.append("Professional experience section detected.")
-        else:
-            score -= 15
-            weaknesses.append("Work experience section missing.")
-            recommendations.append("Add a 'Work Experience' section detailing your past roles.")
-
-        # 7. Quantifiable Metrics (Numbers and Percentages)
-        # Look for digits, percentages, or money symbols which often indicate quantifiable achievements
-        metrics_pattern = r"(\d{2,}%|\$\d+|\d+x|\b\d{2,}\b)"
-        if len(re.findall(metrics_pattern, clean_text)) > 3:
-            strengths.append("Excellent use of quantifiable metrics (numbers/percentages) to show impact.")
-        else:
-            score -= 10
-            weaknesses.append("Lack of quantifiable achievements.")
-            recommendations.append(
-                "Use numbers, percentages, or dollar amounts to quantify your impact (e.g., 'Increased sales by 20%')."
-            )
-
-        # 8. Word Count
+        # 4. Word Count (5 pts)
         word_count = len(clean_text.split())
+        formatting_details["word_count"] = word_count
         if word_count < 150:
-            score -= 10
-            weaknesses.append("Resume is too short (under 150 words).")
-            recommendations.append("Expand on your experience with more detailed descriptions.")
+            formatting_score -= 5
         elif word_count > 1000:
-            score -= 5
-            weaknesses.append("Resume might be too long (over 1000 words).")
-            recommendations.append("Consider condensing your resume to highlight the most relevant points.")
+            formatting_score -= 3
 
-        # 9. Bullet Points
-        if "•" in clean_text or "-" in clean_text or "*" in clean_text:
-            strengths.append("Good use of bullet points for readability.")
-        else:
-            score -= 10
-            weaknesses.append("Lack of bullet points makes it hard to scan.")
-            recommendations.append("Use bullet points rather than long paragraphs for experience descriptions.")
+        # 5. Bullet Points (5 pts)
+        formatting_details["has_bullets"] = any(char in clean_text for char in ["•", "-", "*"])
+        if not formatting_details["has_bullets"]:
+            formatting_score -= 5
 
-        # 10. Action Verbs
-        action_verbs = [
-            "managed",
-            "developed",
-            "led",
-            "created",
-            "designed",
-            "implemented",
-            "increased",
-            "reduced",
-            "optimized",
-            "streamlined",
-            "spearheaded",
-        ]
-        found_verbs = [v for v in action_verbs if v in text_lower]
-        if len(found_verbs) >= 3:
-            strengths.append(f"Strong action verbs used (e.g., {', '.join(found_verbs[:3])}).")
-        else:
-            score -= 5
-            weaknesses.append("Experience descriptions lack strong action verbs.")
-            recommendations.append(
-                "Start your bullet points with strong action verbs (e.g., Developed, Managed, Optimized)."
-            )
+        # 6. Summary / Objective (5 pts)
+        summary_keywords = [r"\bsummary\b", r"\bobjective\b", r"\bprofile\b", r"\babout me\b"]
+        formatting_details["has_summary"] = any(re.search(kw, text_lower) for kw in summary_keywords)
+        if not formatting_details["has_summary"]:
+            formatting_score -= 5
 
-        # Ensure score is within bounds
-        score = max(0, min(100, score))
+        # 7. Consistent formatting (5 pts) — dates pattern
+        date_pattern = r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{4}\b|\b\d{4}\s*[-–—]\s*(?:\d{4}|present|current)\b"
+        date_matches = re.findall(date_pattern, clean_text, re.IGNORECASE)
+        formatting_details["has_consistent_dates"] = len(date_matches) >= 2
+        if not formatting_details["has_consistent_dates"]:
+            formatting_score -= 3
+
+        # 8. Professional links — GitHub, portfolio (5 pts)
+        formatting_details["has_portfolio_links"] = any(link in text_lower for link in ["github.com", "portfolio", "gitlab.com"])
+        if not formatting_details["has_portfolio_links"]:
+            formatting_score -= 2
+
+        formatting_score = max(0, formatting_score)
+
+        # ── Section Quality Evaluation (max 60) ────────────────────────────
+
+        structured = resume_section_extractor.extract(text)
+        quality = section_quality_scorer.evaluate(structured)
+        quality_dict = quality.to_dict()
+
+        # ── Feedback Generation ────────────────────────────────────────────
+        feedback = ats_feedback_generator.generate(
+            formatting_details=formatting_details,
+            quality_details=quality_dict["breakdown"],
+        )
+
+        strengths = feedback["strengths"]
+        weaknesses = feedback["weaknesses"]
+        recommendations = feedback["recommendations"]
+
+        # ── Final Score ────────────────────────────────────────────────────
+        total_score = formatting_score + quality.total_score
+        total_score = max(0, min(100, total_score))
+
+        # Build keyword analysis with detected skills
+        keyword_analysis: dict[str, str] = {}
+        for skill in structured.get("skills", []):
+            # Split comma-separated skills
+            for s in re.split(r"[,|;]", skill):
+                s = s.strip()
+                if s:
+                    category = self._categorize_skill(s)
+                    keyword_analysis[s] = category
+
+        # Also detect skills mentioned in experience
+        exp_text_lower = " ".join(structured.get("experience", [])).lower()
+        for cat_name, cat_skills in SKILL_CATEGORIES.items():
+            for sk in cat_skills:
+                if sk not in keyword_analysis:
+                    # Use negative lookbehinds/lookaheads for word characters 
+                    # to prevent partial matches like "r" in "experience".
+                    # We use (?<!\w) instead of \b to properly handle skills ending in symbols like "c++"
+                    pattern = r'(?<!\w)' + re.escape(sk.lower()) + r'(?!\w)'
+                    if re.search(pattern, exp_text_lower):
+                        keyword_analysis[sk] = f"Hard skill ({cat_name})"
 
         return {
-            "ats_score": score,
+            "ats_score": total_score,
+            "formatting_score": formatting_score,
+            "section_quality": quality.to_dict(),
             "strengths": strengths,
             "weaknesses": weaknesses,
             "recommendations": recommendations,
-            "keyword_analysis": {"Rule-Based": "Engine active", "ATS Check": "Heuristics"},
+            "keyword_analysis": keyword_analysis,
         }
+
+    @staticmethod
+    def _categorize_skill(skill: str) -> str:
+        """Categorize a single skill string."""
+        from app.services.section_quality_scorer import SKILL_CATEGORIES
+        skill_lower = skill.lower().strip()
+        for cat_name, cat_skills in SKILL_CATEGORIES.items():
+            if skill_lower in cat_skills:
+                return f"Hard skill ({cat_name})"
+        # Check for soft skills
+        soft_skills = {
+            "leadership", "communication", "teamwork", "problem-solving",
+            "collaboration", "time management", "adaptability", "creativity",
+            "critical thinking", "attention to detail", "work ethic",
+        }
+        if skill_lower in soft_skills:
+            return "Soft skill"
+        return "Skill"
 
     async def generate_analysis(self, raw_text: str) -> dict:
         """
@@ -185,12 +196,38 @@ class ATSService:
         existing_analysis = result.scalars().first()
 
         if existing_analysis:
-            # We overwrite or return existing, for V1 we can delete existing and create new, or just return existing
-            # Returning existing so we don't spam. To force re-analysis, one would delete the old analysis.
-            return existing_analysis
+            # For development/testing, we want to re-analyze to use the latest engine logic
+            await session.delete(existing_analysis)
+            await session.commit()
+
+        # ── Resume Validation Layer ──────────────────────────────────────────
+        classification = resume_classifier.classify(resume.raw_text)
+
+        if not classification.is_resume:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "message": "The uploaded document does not appear to be a resume.",
+                    "is_resume": False,
+                    "confidence": classification.confidence,
+                    "detected_sections": classification.detected_sections,
+                    "missing_sections": classification.missing_sections,
+                },
+            )
+        # ────────────────────────────────────────────────────────────────────
 
         # Generate the analysis
         analysis_data = await self.generate_analysis(resume.raw_text)
+
+        # Apply confidence penalty for borderline documents
+        if classification.confidence < 70:
+            penalty_factor = classification.confidence / 100.0
+            analysis_data["ats_score"] = int(analysis_data["ats_score"] * penalty_factor)
+            
+            # Insert this specific warning at the top of the weaknesses list
+            penalty_msg = f"ATS match score was penalized because the document confidence is low ({classification.confidence}%)."
+            if penalty_msg not in analysis_data["weaknesses"]:
+                analysis_data["weaknesses"].insert(0, penalty_msg)
 
         # Create and save new analysis
         new_analysis = ResumeAnalysis(
@@ -199,11 +236,35 @@ class ATSService:
             strengths=analysis_data["strengths"],
             weaknesses=analysis_data["weaknesses"],
             recommendations=analysis_data["recommendations"],
-            keyword_analysis=analysis_data["keyword_analysis"],
+            keyword_analysis={
+                **analysis_data["keyword_analysis"],
+                "resume_validation": {
+                    "confidence": classification.confidence,
+                    "detected_sections": classification.detected_sections,
+                    "missing_sections": classification.missing_sections,
+                    **(  # include warning if in the 40-69 grey zone
+                        {"warning": classification.warning}
+                        if classification.warning
+                        else {}
+                    ),
+                },
+                "section_quality": analysis_data["section_quality"],
+                "formatting_score": analysis_data["formatting_score"],
+            },
         )
         session.add(new_analysis)
 
-        resume.parsed_data = {"ats_analyzed": True}
+        # Extract structured sections (already computed inside _analyze_text,
+        # but we call again here for storage — it's cheap and deterministic)
+        structured_data = resume_section_extractor.extract(resume.raw_text)
+        
+        # Merge with existing parsed_data or create new
+        existing_data = resume.parsed_data or {}
+        resume.parsed_data = {
+            **existing_data,
+            "ats_analyzed": True,
+            "structured_sections": structured_data
+        }
 
         await session.commit()
         await session.refresh(new_analysis)

@@ -16,6 +16,42 @@ export interface ResumeListItem {
   updated_at: string;
 }
 
+export interface ResumeValidation {
+  confidence: number;
+  detected_sections: string[];
+  missing_sections: string[];
+  warning?: string;
+}
+
+export interface SectionBreakdown {
+  score: number;
+  max_score: number;
+  details: Record<string, unknown>;
+}
+
+export interface SectionQuality {
+  experience_score: number;
+  skills_score: number;
+  projects_score: number;
+  education_score: number;
+  total_section_quality_score: number;
+  max_section_quality_score: number;
+  breakdown: {
+    experience: SectionBreakdown;
+    skills: SectionBreakdown;
+    projects: SectionBreakdown;
+    education: SectionBreakdown;
+  };
+}
+
+export interface KeywordAnalysis {
+  // String-keyed skill entries (e.g. "Python" -> "Hard skill (languages)")
+  [key: string]: unknown;
+  resume_validation?: ResumeValidation;
+  section_quality?: SectionQuality;
+  formatting_score?: number;
+}
+
 export interface ATSAnalysis {
   id: string;
   resume_id: string;
@@ -23,7 +59,7 @@ export interface ATSAnalysis {
   strengths: string[] | null;
   weaknesses: string[] | null;
   recommendations: string[] | null;
-  keyword_analysis: Record<string, string> | null;
+  keyword_analysis: KeywordAnalysis | null;
   created_at: string;
   updated_at: string;
 }
