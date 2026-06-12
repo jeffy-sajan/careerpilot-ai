@@ -154,14 +154,15 @@ function SectionBar({
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 type Tab = "strengths" | "weaknesses" | "recommendations";
 
-function FeedbackTabs({
-  analysis,
-}: {
-  analysis: ATSAnalysis;
-}) {
+function FeedbackTabs({ analysis }: { analysis: ATSAnalysis }) {
   const [tab, setTab] = useState<Tab>("strengths");
 
-  const tabs: { id: Tab; label: string; count: number; icon: React.ReactNode }[] = [
+  const tabs: {
+    id: Tab;
+    label: string;
+    count: number;
+    icon: React.ReactNode;
+  }[] = [
     {
       id: "strengths",
       label: "Strengths",
@@ -275,7 +276,7 @@ function KeywordCloud({ analysis }: { analysis: ATSAnalysis }) {
 
   // Group string-value keywords by category prefix
   const entries = Object.entries(analysis.keyword_analysis).filter(
-    ([, v]) => typeof v === "string"
+    ([, v]) => typeof v === "string",
   ) as [string, string][];
 
   if (entries.length === 0) return null;
@@ -366,9 +367,7 @@ function ValidationCard({ analysis }: { analysis: ATSAnalysis }) {
         title="Document Validation"
         subtitle="Pre-analysis resume classification"
         eyebrow="RESUME CLASSIFIER"
-        action={
-          <Pill tone={confidenceTone}>{conf}% confidence</Pill>
-        }
+        action={<Pill tone={confidenceTone}>{conf}% confidence</Pill>}
       />
       <div className="p-4 sm:p-5 space-y-4">
         {validation.warning && (
@@ -440,7 +439,18 @@ function SectionQualityCard({ sq }: { sq: SectionQuality }) {
         subtitle="How well each section scores based on content quality"
         eyebrow="CONTENT ANALYSIS"
         action={
-          <Pill tone={sq.total_section_quality_score / sq.max_section_quality_score >= 0.75 ? "success" : sq.total_section_quality_score / sq.max_section_quality_score >= 0.45 ? "warning" : "destructive"}>
+          <Pill
+            tone={
+              sq.total_section_quality_score / sq.max_section_quality_score >=
+              0.75
+                ? "success"
+                : sq.total_section_quality_score /
+                      sq.max_section_quality_score >=
+                    0.45
+                  ? "warning"
+                  : "destructive"
+            }
+          >
             {sq.total_section_quality_score}/{sq.max_section_quality_score}
           </Pill>
         }
@@ -612,7 +622,9 @@ export default function ResumeAnalysisPage() {
     <>
       <Topbar
         title="ATS Analysis"
-        subtitle={resume ? `Analyzing: ${resume.original_file_name}` : "Loading..."}
+        subtitle={
+          resume ? `Analyzing: ${resume.original_file_name}` : "Loading..."
+        }
         actions={
           <Link to="/resume-analyzer">
             <Button variant="outline">

@@ -394,7 +394,8 @@ function ResumeRow({
               {resume.original_file_name}
             </div>
             <div className="text-xs text-muted-foreground">
-              {formatBytes(resume.file_size_bytes)} · {formatDate(resume.created_at)}
+              {formatBytes(resume.file_size_bytes)} ·{" "}
+              {formatDate(resume.created_at)}
             </div>
           </div>
         </div>

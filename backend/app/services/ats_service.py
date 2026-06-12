@@ -37,8 +37,8 @@ class ATSService:
         Combines contact/formatting checks (40 pts) with section-quality
         evaluation (60 pts) via SectionQualityScorer.
         """
-        from app.services.section_quality_scorer import section_quality_scorer
         from app.services.ats_feedback_generator import ats_feedback_generator
+        from app.services.section_quality_scorer import section_quality_scorer
 
         formatting_score = 40  # max 40 pts for contact + formatting
         formatting_details = {}
@@ -86,14 +86,20 @@ class ATSService:
             formatting_score -= 5
 
         # 7. Consistent formatting (5 pts) — dates pattern
-        date_pattern = r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{4}\b|\b\d{4}\s*[-–—]\s*(?:\d{4}|present|current)\b"
+        date_pattern = (
+            r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|"
+            r"January|February|March|April|May|June|July|August|September|October|November|December)"
+            r"\s*\d{4}\b|\b\d{4}\s*[-–—]\s*(?:\d{4}|present|current)\b"
+        )
         date_matches = re.findall(date_pattern, clean_text, re.IGNORECASE)
         formatting_details["has_consistent_dates"] = len(date_matches) >= 2
         if not formatting_details["has_consistent_dates"]:
             formatting_score -= 3
 
         # 8. Professional links — GitHub, portfolio (5 pts)
-        formatting_details["has_portfolio_links"] = any(link in text_lower for link in ["github.com", "portfolio", "gitlab.com"])
+        formatting_details["has_portfolio_links"] = any(
+            link in text_lower for link in ["github.com", "portfolio", "gitlab.com"]
+        )
         if not formatting_details["has_portfolio_links"]:
             formatting_score -= 2
 
@@ -225,7 +231,10 @@ class ATSService:
             analysis_data["ats_score"] = int(analysis_data["ats_score"] * penalty_factor)
             
             # Insert this specific warning at the top of the weaknesses list
-            penalty_msg = f"ATS match score was penalized because the document confidence is low ({classification.confidence}%)."
+            penalty_msg = (
+                f"ATS match score was penalized because the document confidence is low "
+                f"({classification.confidence}%)."
+            )
             if penalty_msg not in analysis_data["weaknesses"]:
                 analysis_data["weaknesses"].insert(0, penalty_msg)
 

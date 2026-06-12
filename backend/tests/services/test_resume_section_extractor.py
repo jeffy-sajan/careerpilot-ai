@@ -8,6 +8,7 @@ import pytest
 
 from app.services.resume_section_extractor import ResumeSectionExtractor
 
+
 @pytest.fixture
 def extractor():
     return ResumeSectionExtractor()

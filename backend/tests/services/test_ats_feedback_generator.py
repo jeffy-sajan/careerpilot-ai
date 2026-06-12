@@ -1,5 +1,5 @@
-import pytest
 from app.services.ats_feedback_generator import ats_feedback_generator
+
 
 def test_perfect_resume_feedback():
     formatting = {

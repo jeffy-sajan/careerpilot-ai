@@ -30,12 +30,37 @@ class ResumeSectionExtractor:
     # Patterns to match section headings.
     # The header should be on its own line (or padded by spaces/stars).
     SECTION_HEADERS = {
-        "summary": re.compile(r"^\s*[\*\#\-\_]*\s*(?:SUMMARY|PROFESSIONAL SUMMARY|PROFILE|OBJECTIVE|ABOUT ME)\s*[\*\#\-\_]*\s*$", re.MULTILINE | re.IGNORECASE),
-        "experience": re.compile(r"^\s*[\*\#\-\_]*\s*(?:EXPERIENCE|WORK EXPERIENCE|EMPLOYMENT|WORK HISTORY|PROFESSIONAL EXPERIENCE|CAREER HISTORY)\s*[\*\#\-\_]*\s*$", re.MULTILINE | re.IGNORECASE),
-        "education": re.compile(r"^\s*[\*\#\-\_]*\s*(?:EDUCATION|ACADEMIC BACKGROUND|ACADEMICS|QUALIFICATIONS)\s*[\*\#\-\_]*\s*$", re.MULTILINE | re.IGNORECASE),
-        "skills": re.compile(r"^\s*[\*\#\-\_]*\s*(?:SKILLS|TECHNICAL SKILLS|CORE COMPETENCIES|TECHNOLOGIES|EXPERTISE|IT SKILLS)\s*[\*\#\-\_]*\s*$", re.MULTILINE | re.IGNORECASE),
-        "projects": re.compile(r"^\s*[\*\#\-\_]*\s*(?:PROJECTS|PERSONAL PROJECTS|ACADEMIC PROJECTS|OPEN SOURCE|PORTFOLIO)\s*[\*\#\-\_]*\s*$", re.MULTILINE | re.IGNORECASE),
-        "certifications": re.compile(r"^\s*[\*\#\-\_]*\s*(?:CERTIFICATIONS|CERTIFICATES|LICENSES|AWARDS|ACHIEVEMENTS)\s*[\*\#\-\_]*\s*$", re.MULTILINE | re.IGNORECASE),
+        "summary": re.compile(
+            r"^\s*[\*\#\-\_]*\s*(?:SUMMARY|PROFESSIONAL SUMMARY|PROFILE|OBJECTIVE|ABOUT ME)"
+            r"\s*(?::|[\*\#\-\_])*\s*(?:$|:)",
+            re.MULTILINE | re.IGNORECASE,
+        ),
+        "experience": re.compile(
+            r"^\s*[\*\#\-\_]*\s*"
+            r"(?:EXPERIENCE|WORK EXPERIENCE|EMPLOYMENT|WORK HISTORY|PROFESSIONAL EXPERIENCE|CAREER HISTORY)"
+            r"\s*(?::|[\*\#\-\_])*\s*(?:$|:)",
+            re.MULTILINE | re.IGNORECASE,
+        ),
+        "education": re.compile(
+            r"^\s*[\*\#\-\_]*\s*(?:EDUCATION|ACADEMIC BACKGROUND|ACADEMICS|QUALIFICATIONS)"
+            r"\s*(?::|[\*\#\-\_])*\s*(?:$|:)",
+            re.MULTILINE | re.IGNORECASE,
+        ),
+        "skills": re.compile(
+            r"^\s*[\*\#\-\_]*\s*(?:SKILLS|TECHNICAL SKILLS|CORE COMPETENCIES|TECHNOLOGIES|EXPERTISE|IT SKILLS)"
+            r"\s*(?::|[\*\#\-\_])*\s*(?:$|:)",
+            re.MULTILINE | re.IGNORECASE,
+        ),
+        "projects": re.compile(
+            r"^\s*[\*\#\-\_]*\s*(?:PROJECTS|PERSONAL PROJECTS|ACADEMIC PROJECTS|OPEN SOURCE|PORTFOLIO)"
+            r"\s*(?::|[\*\#\-\_])*\s*(?:$|:)",
+            re.MULTILINE | re.IGNORECASE,
+        ),
+        "certifications": re.compile(
+            r"^\s*[\*\#\-\_]*\s*(?:CERTIFICATIONS|CERTIFICATES|LICENSES|AWARDS|ACHIEVEMENTS)"
+            r"\s*(?::|[\*\#\-\_])*\s*(?:$|:)",
+            re.MULTILINE | re.IGNORECASE,
+        ),
     }
 
     # Used to split text block into list items

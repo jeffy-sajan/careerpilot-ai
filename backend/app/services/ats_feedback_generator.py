@@ -91,7 +91,10 @@ class ATSFeedbackGenerator:
             strengths.append(f"Strong action verbs used ({', '.join(verbs[:5])}).")
         elif len(verbs) == 0 and exp_count > 0:
             weaknesses.append("No action verbs detected in experience.")
-            recommendations.append("Start bullet points with strong action verbs like 'Developed', 'Managed', 'Optimized'.")
+            recommendations.append(
+                "Start bullet points with strong action verbs like "
+                "'Developed', 'Managed', 'Optimized'."
+            )
         elif exp_count > 0:
             recommendations.append("Use a wider variety of action verbs to strengthen your experience descriptions.")
 
@@ -156,7 +159,10 @@ class ATSFeedbackGenerator:
                 recommendations.append("Expand project descriptions with more detail about your role and impact.")
             else:
                 weaknesses.append("Project descriptions are too brief.")
-                recommendations.append("Write 1-2 sentences per project explaining what you built, what technologies you used, and what the outcome was.")
+                recommendations.append(
+                    "Write 1-2 sentences per project explaining what you built, "
+                    "what technologies you used, and what the outcome was."
+                )
 
         # ── Education Feedback ───────────────────────────────────────────────
 
