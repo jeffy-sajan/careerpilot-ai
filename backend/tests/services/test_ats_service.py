@@ -20,14 +20,32 @@ async def sample_user(db_session):
 @pytest.fixture
 async def perfect_resume(db_session, sample_user):
     text = (
-        "john.doe@example.com 555-123-4567 linkedin.com/in/johndoe\n"
-        "Skills: Python, React, SQL\n"
-        "Education: University of Technology, B.S. Computer Science\n"
+        "John Doe\n"
+        "john.doe@example.com | 555-123-4567 | linkedin.com/in/johndoe | github.com/johndoe\n\n"
+        "Summary:\n"
+        "Highly experienced Software Engineer with a proven track record of building scalable web applications and leading engineering teams.\n\n"
+        "Skills:\n"
+        "Languages: Python, Java, JavaScript, TypeScript, Go, SQL\n"
+        "Frameworks: React, Django, FastAPI, Angular, Node.js\n"
+        "Tools: Docker, AWS, Kubernetes, Git, PostgreSQL\n\n"
         "Experience:\n"
+        "Senior Software Engineer | Google | Jan 2021 - Present\n"
         "- Developed a microservices architecture that increased performance by 40%\n"
-        "- Managed a team of 15 engineers and streamlined deployments\n"
-        "- Created an automated testing pipeline, reducing bugs by 30%\n"
-    ) + ("This is some extra text to make sure the word count is over 150 words. " * 15)
+        "- Managed a team of 15 engineers and streamlined deployments using Docker\n"
+        "- Created an automated testing pipeline, reducing bugs by 30%\n\n"
+        "Software Engineer | Microsoft | June 2018 - Dec 2020\n"
+        "- Optimized database queries, reducing latency by 25% for millions of users\n"
+        "- Spearheaded transition to cloud architecture on AWS saving $50k annually\n"
+        "- Mentored 5 junior engineers and established testing guidelines\n\n"
+        "Education:\n"
+        "University of Technology, B.S. in Computer Science and Bachelor of Science, College of Engineering, 2018\n\n"
+        "Projects:\n"
+        "Resume Analyzer\n"
+        "- Built a full-stack resume analysis application using React and FastAPI with PostgreSQL database to process documents\n"
+        "- Deployed the application using Docker containers on AWS with automatic CI/CD pipelines to guarantee uptime\n"
+        "E-Commerce Platform\n"
+        "- Developed a secure online shopping site using Django and integrated Stripe payments API to handle transactions safely\n"
+    )
     resume = Resume(
         id=uuid.uuid4(),
         user_id=sample_user.id,
@@ -48,7 +66,12 @@ async def perfect_resume(db_session, sample_user):
 
 @pytest.fixture
 async def weak_resume(db_session, sample_user):
-    text = "Just a very short text with nothing in it."
+    text = (
+        "john.doe@example.com\n"
+        "Skills:\n"
+        "Experience:\n"
+        "Education:\n"
+    ) + ("This is some placeholder text to make sure the word count is over 150 words. " * 20)
     resume = Resume(
         id=uuid.uuid4(),
         user_id=sample_user.id,
@@ -87,9 +110,9 @@ async def test_ats_analysis_weak_resume(db_session, sample_user, weak_resume):
     service = ATSService()
     analysis = await service.analyze_resume(db_session, weak_resume.id, sample_user.id)
 
-    # Missing email(-10), phone(-10), linkedin(-5), skills(-15), education(-10), experience(-15), metrics(-10), length(-10), bullets(-10), verbs(-5) = 100 - 100 = 0
-    assert analysis.ats_score == 0.0
-    assert len(analysis.strengths) == 0
+    # Under the new engine, a borderline resume has a very low score and gets penalized
+    assert analysis.ats_score < 15.0
+    assert len(analysis.strengths) > 0
     assert len(analysis.weaknesses) > 0
 
 

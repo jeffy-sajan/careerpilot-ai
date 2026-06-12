@@ -36,10 +36,13 @@ function formatBytes(bytes: number) {
 }
 
 function formatDate(iso: string) {
-  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
-    Math.round((new Date(iso).getTime() - Date.now()) / (1000 * 60)),
-    "minute",
-  );
+  const diffMs = new Date(iso).getTime() - Date.now();
+  const diffMin = Math.round(diffMs / (1000 * 60));
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minute");
+  const diffHr = Math.round(diffMin / 60);
+  if (Math.abs(diffHr) < 24) return rtf.format(diffHr, "hour");
+  return rtf.format(Math.round(diffHr / 24), "day");
 }
 
 function StatusPill({ status }: { status: ResumeListItem["status"] }) {
@@ -168,7 +171,7 @@ export default function ResumeAnalyzerPage() {
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
         {/* Status Summary Bar */}
         {resumes.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             <StatusSummaryCard
               icon={<Clock className="h-4 w-4" />}
               label="Uploaded"
@@ -211,7 +214,7 @@ export default function ResumeAnalyzerPage() {
               onDragLeave={() => setDragOver(false)}
               onDrop={onDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 text-center cursor-pointer transition-colors ${
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-10 sm:py-12 text-center cursor-pointer transition-colors ${
                 dragOver
                   ? "border-ink bg-surface-muted"
                   : "border-border bg-surface-muted hover:border-ink/40"
@@ -232,11 +235,10 @@ export default function ResumeAnalyzerPage() {
                 <h3 className="text-base font-semibold text-foreground">
                   {uploadMutation.isPending
                     ? "Uploading…"
-                    : "Drop your resume here, or browse"}
+                    : "Drop resume here, or tap to browse"}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  PDF and DOCX only · max {MAX_SIZE_MB}MB · we never share your
-                  data
+                  PDF and DOCX only · max {MAX_SIZE_MB}MB
                 </p>
               </div>
               {!uploadMutation.isPending && (
@@ -366,10 +368,12 @@ function ResumeRow({
 
   return (
     <li
-      className={`group px-5 py-3.5 transition-colors hover:bg-surface-muted/50 ${isProcessing ? "animate-pulse" : ""}`}
+      className={`group px-4 sm:px-5 py-3.5 transition-colors hover:bg-surface-muted/50 ${isProcessing ? "animate-pulse" : ""}`}
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
+      {/* Main row */}
+      <div className="flex items-center justify-between gap-3">
+        {/* Icon + name */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div
             className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ${
               isFailed
@@ -395,17 +399,26 @@ function ResumeRow({
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+
+        {/* Status + actions — always on the right */}
+        <div className="flex shrink-0 items-center gap-2">
           <StatusPill status={resume.status} />
           {resume.status === "COMPLETED" && (
             <Link to={`/resume-analyzer/${resume.id}/analysis`}>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs px-2.5"
+                className="h-8 text-xs px-2.5 hidden sm:inline-flex"
               >
                 <Wand2 className="mr-1.5 h-3 w-3" /> Analyze ATS
               </Button>
+              {/* Mobile: icon-only */}
+              <button
+                className="sm:hidden grid h-8 w-8 place-items-center border border-ink/20 text-foreground hover:bg-muted transition-colors rounded"
+                aria-label="Analyze ATS"
+              >
+                <Wand2 className="h-4 w-4" />
+              </button>
             </Link>
           )}
           <button
@@ -422,6 +435,16 @@ function ResumeRow({
           </button>
         </div>
       </div>
+
+      {/* Mobile-only: tap to analyze banner */}
+      {resume.status === "COMPLETED" && (
+        <Link
+          to={`/resume-analyzer/${resume.id}/analysis`}
+          className="sm:hidden mt-2.5 ml-12 flex items-center gap-1.5 text-xs text-primary font-mono uppercase tracking-wider hover:underline"
+        >
+          <Wand2 className="h-3 w-3" /> Tap to analyze ATS
+        </Link>
+      )}
 
       {/* Error message for FAILED resumes */}
       {isFailed && resume.error_message && (
